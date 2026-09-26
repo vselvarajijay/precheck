@@ -1,4 +1,4 @@
-import type { RuleSummary } from '@/api/types'
+import type { RuleSummary } from '@/shared/api/types'
 
 export function ruleSummary(over: Partial<RuleSummary> = {}): RuleSummary {
   return {

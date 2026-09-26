@@ -23,6 +23,8 @@ export default defineConfig({
     environment: 'jsdom',
     environmentOptions: { jsdom: { url: 'http://precheck.test' } },
     setupFiles: ['./src/test/setup.ts'],
+    // jsdom UI tests (CodeMirror, 255-option editors) can exceed 5 s when the suite runs in parallel.
+    testTimeout: 15_000,
     include: ['src/**/*.test.{ts,tsx}'],
   },
 })

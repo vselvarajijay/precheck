@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { expect, test } from 'vitest'
-import { NAV_ITEMS } from '@/components/layout/AppShell'
+import { NAV_ITEMS } from '@/app/AppShell'
 import { renderApp } from '@/test/render'
 import { server } from '@/test/server'
 
