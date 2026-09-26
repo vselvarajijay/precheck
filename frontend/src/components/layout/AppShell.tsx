@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router'
+import { useEscalations } from '@/api/lab'
 import { cn } from '@/lib/utils'
 import { HealthBadge } from './HealthBadge'
 
@@ -6,10 +7,12 @@ export const NAV_ITEMS = [
   { to: '/rules', label: 'Rules' },
   { to: '/playground', label: 'Playground' },
   { to: '/tests', label: 'Tests' },
+  { to: '/lab', label: 'Agent Lab' },
   { to: '/settings', label: 'Settings' },
 ] as const
 
 export function AppShell() {
+  const pending = useEscalations('pending').data?.length ?? 0
   return (
     <div className="flex min-h-svh bg-background text-foreground">
       <aside className="w-52 shrink-0 border-r bg-sidebar p-3">
@@ -27,6 +30,18 @@ export function AppShell() {
               }
             >
               {item.label}
+              {item.to === '/lab' && pending > 0 && (
+                <>
+                  <span
+                    className="ml-2 rounded-full bg-amber-100 px-1.5 text-[11px] font-medium text-amber-900"
+                    aria-hidden
+                    data-testid="escalation-badge"
+                  >
+                    {pending}
+                  </span>
+                  <span className="sr-only"> ({pending} pending escalations)</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
