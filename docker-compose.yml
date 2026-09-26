@@ -23,6 +23,11 @@ x-backend: &backend
 services:
   api:
     <<: *backend
+    environment:
+      DB_PATH: /app/data/app.db
+      TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SEED_DEMO: ${SEED_DEMO:-true}
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:
@@ -43,6 +48,20 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  tools:
+    <<: *backend
+    # Mock business tools (no real side effects) behind MCP; call log at /calls.
+    command: ["python", "-m", "precheck.labtools.server", "--port", "8100"]
+    entrypoint: []
+    ports:
+      - "127.0.0.1:8100:8100"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=3)"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -108,6 +127,7 @@ services:
       ENABLE_TEST_RESET: "true"
       # replay by default; `make e2e-live` / `make e2e-record` switch mode and pass the key.
       JEV_MODE: ${E2E_JEV_MODE:-replay}
+      JEV_FIXTURE_LOG: ${E2E_FIXTURE_LOG:-}
       TYPESAFE_API_KEY: ${E2E_JEV_KEY:-}
       # Translator LLM: replay recorded Claude responses unless `make e2e-live-llm`.
       LLM_MODE: ${E2E_LLM_MODE:-replay}

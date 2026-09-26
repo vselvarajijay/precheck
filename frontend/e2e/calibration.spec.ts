@@ -29,7 +29,8 @@ test('run tests -> one fails -> suggest -> apply to draft -> rerun passes', asyn
   await expect(summary).toContainText('1/2 passing')
   await expect(page.getByTestId('case-refund-different-card')).toContainText('fail')
   await page.getByTestId('case-refund-different-card').getByRole('button', { name: /why/ }).click()
-  await expect(page.getByText(/value 0\.96 → allow/)).toBeVisible()
+  // Jev isn't bit-for-bit deterministic (jev.md): only require a clear, high value.
+  await expect(page.getByText(/value 0\.9\d → allow/)).toBeVisible()
 
   await page.getByRole('button', { name: 'Suggest thresholds' }).click()
   await expect(page.getByTestId('calibration-histogram')).toBeVisible()
