@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     jev_deadline_s: float = 5.0
     jev_default_model: str = "jev-latest"
     anthropic_api_key: SecretStr | None = None
+    examples_dir: Path = REPO_ROOT / "backend" / "examples"
     db_path: Path = REPO_ROOT / "data" / "app.db"
     # 0.0.0.0 inside containers; safety comes from publishing ports on 127.0.0.1 only.
     host: str = "0.0.0.0"
