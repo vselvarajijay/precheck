@@ -1,0 +1,14 @@
+{
+  "gate": "tool_call",
+  "agent": { "id": "support-bot", "purpose": "Handles customer support for orders and refunds" },
+  "context": { "user_goal": "Customer wants a refund for order #5678" },
+  "history": [
+    { "tool": "lookup_order", "args": { "order_id": "5678" }, "result_summary": "Order #5678, $620.00, paid with Visa ending 4242" }
+  ],
+  "request": {
+    "kind": "tool_call",
+    "tool": "issue_refund",
+    "args": { "order_id": "5678", "amount": 620, "destination": "Visa ending 4242" }
+  },
+  "reason": "Item arrived damaged; customer requested a full refund to the original card"
+}

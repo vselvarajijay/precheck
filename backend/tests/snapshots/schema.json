@@ -1,0 +1,3973 @@
+{
+  "CheckRequest": {
+    "$defs": {
+      "AgentInfo": {
+        "additionalProperties": false,
+        "description": "Who is acting.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Summary of the agent's system prompt",
+            "title": "Purpose"
+          }
+        },
+        "title": "AgentInfo",
+        "type": "object"
+      },
+      "Context": {
+        "additionalProperties": false,
+        "description": "Why the agent is acting, if the host provides it.",
+        "properties": {
+          "recent_messages": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Recent Messages"
+          },
+          "user_goal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "User Goal"
+          }
+        },
+        "title": "Context",
+        "type": "object"
+      },
+      "Gate": {
+        "enum": [
+          "tool_call",
+          "egress",
+          "ingress"
+        ],
+        "title": "Gate",
+        "type": "string"
+      },
+      "HistoryItem": {
+        "additionalProperties": false,
+        "description": "A prior tool call in this session.",
+        "properties": {
+          "args": {
+            "additionalProperties": true,
+            "title": "Args",
+            "type": "object"
+          },
+          "result_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Result Summary"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool"
+        ],
+        "title": "HistoryItem",
+        "type": "object"
+      },
+      "RequestedAction": {
+        "additionalProperties": false,
+        "description": "What the agent wants to do now.",
+        "properties": {
+          "args": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Args"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Body"
+          },
+          "kind": {
+            "enum": [
+              "tool_call",
+              "external_call",
+              "content"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Method"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "RequestedAction",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Only `gate` and `request` are required; rules declare what else they need.",
+    "properties": {
+      "agent": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/AgentInfo"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "context": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Context"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "gate": {
+        "$ref": "#/$defs/Gate"
+      },
+      "history": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/HistoryItem"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "History"
+      },
+      "reason": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The agent's stated justification",
+        "title": "Reason"
+      },
+      "request": {
+        "$ref": "#/$defs/RequestedAction"
+      }
+    },
+    "required": [
+      "gate",
+      "request"
+    ],
+    "title": "CheckRequest",
+    "type": "object"
+  },
+  "Decision": {
+    "$defs": {
+      "ChoiceAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "choice": {
+            "title": "Choice",
+            "type": "string"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Probabilities",
+            "type": "object"
+          },
+          "type": {
+            "const": "choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "choice",
+          "confidence"
+        ],
+        "title": "ChoiceAnswer",
+        "type": "object"
+      },
+      "DecisionVersions": {
+        "additionalProperties": false,
+        "properties": {
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "jev_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Jev Model"
+          },
+          "policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Policy"
+          },
+          "rules": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Rules",
+            "type": "object"
+          },
+          "schema": {
+            "default": 1,
+            "title": "Schema",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "engine"
+        ],
+        "title": "DecisionVersions",
+        "type": "object"
+      },
+      "JevUsage": {
+        "additionalProperties": false,
+        "properties": {
+          "input_tokens": {
+            "default": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "title": "JevUsage",
+        "type": "object"
+      },
+      "NoulAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "noul": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Noul",
+            "type": "number"
+          },
+          "type": {
+            "const": "noul",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "noul"
+        ],
+        "title": "NoulAnswer",
+        "type": "object"
+      },
+      "QuestionResult": {
+        "additionalProperties": false,
+        "description": "One Jev question's answer and the verdict it mapped to.",
+        "properties": {
+          "answer": {
+            "discriminator": {
+              "mapping": {
+                "choice": "#/$defs/ChoiceAnswer",
+                "noul": "#/$defs/NoulAnswer",
+                "score": "#/$defs/ScoreAnswer"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/NoulAnswer"
+              },
+              {
+                "$ref": "#/$defs/ChoiceAnswer"
+              },
+              {
+                "$ref": "#/$defs/ScoreAnswer"
+              }
+            ],
+            "title": "Answer"
+          },
+          "band": {
+            "description": "Which band/branch was hit, e.g. 'deny (>= 0.7)'",
+            "title": "Band",
+            "type": "string"
+          },
+          "value": {
+            "description": "The number compared with the bands (or the confidence)",
+            "title": "Value",
+            "type": "number"
+          },
+          "verdict": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "answer",
+          "verdict",
+          "value",
+          "band"
+        ],
+        "title": "QuestionResult",
+        "type": "object"
+      },
+      "RuleResult": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Error"
+          },
+          "jev": {
+            "additionalProperties": {
+              "$ref": "#/$defs/QuestionResult"
+            },
+            "title": "Jev",
+            "type": "object"
+          },
+          "matched": {
+            "title": "Matched",
+            "type": "boolean"
+          },
+          "missing_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Fields",
+            "type": "array"
+          },
+          "predicate_inputs": {
+            "additionalProperties": true,
+            "title": "Predicate Inputs",
+            "type": "object"
+          },
+          "predicate_result": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Predicate Result"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "rule_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rule Version"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "missing_fields",
+                  "deterministic",
+                  "jev",
+                  "error",
+                  "no_verdict"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "rule_id",
+          "matched"
+        ],
+        "title": "RuleResult",
+        "type": "object"
+      },
+      "ScoreAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "legend": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Legend",
+            "type": "object"
+          },
+          "probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Probabilities",
+            "type": "object"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "type": {
+            "const": "score",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "score",
+          "confidence"
+        ],
+        "title": "ScoreAnswer",
+        "type": "object"
+      },
+      "Verdict": {
+        "enum": [
+          "allow",
+          "deny",
+          "escalate"
+        ],
+        "title": "Verdict",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "gate_default_applied": {
+        "default": false,
+        "title": "Gate Default Applied",
+        "type": "boolean"
+      },
+      "latency_ms": {
+        "default": 0.0,
+        "title": "Latency Ms",
+        "type": "number"
+      },
+      "rule_results": {
+        "items": {
+          "$ref": "#/$defs/RuleResult"
+        },
+        "title": "Rule Results",
+        "type": "array"
+      },
+      "usage": {
+        "$ref": "#/$defs/JevUsage"
+      },
+      "verdict": {
+        "$ref": "#/$defs/Verdict"
+      },
+      "versions": {
+        "$ref": "#/$defs/DecisionVersions"
+      }
+    },
+    "required": [
+      "verdict",
+      "versions"
+    ],
+    "title": "Decision",
+    "type": "object"
+  },
+  "RuleBody": {
+    "$defs": {
+      "AllPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "all",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicates": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/AllPredicate",
+                  "any": "#/$defs/AnyPredicate",
+                  "domain_in": "#/$defs/DomainPredicate",
+                  "domain_not_in": "#/$defs/DomainPredicate",
+                  "eq": "#/$defs/ComparePredicate",
+                  "exists": "#/$defs/ExistsPredicate",
+                  "gt": "#/$defs/ComparePredicate",
+                  "gte": "#/$defs/ComparePredicate",
+                  "in": "#/$defs/SetPredicate",
+                  "lt": "#/$defs/ComparePredicate",
+                  "lte": "#/$defs/ComparePredicate",
+                  "min_len": "#/$defs/MinLenPredicate",
+                  "missing": "#/$defs/ExistsPredicate",
+                  "ne": "#/$defs/ComparePredicate",
+                  "not": "#/$defs/NotPredicate",
+                  "not_in": "#/$defs/SetPredicate",
+                  "regex": "#/$defs/RegexPredicate"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ExistsPredicate"
+                },
+                {
+                  "$ref": "#/$defs/ComparePredicate"
+                },
+                {
+                  "$ref": "#/$defs/SetPredicate"
+                },
+                {
+                  "$ref": "#/$defs/RegexPredicate"
+                },
+                {
+                  "$ref": "#/$defs/MinLenPredicate"
+                },
+                {
+                  "$ref": "#/$defs/DomainPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AllPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AnyPredicate"
+                },
+                {
+                  "$ref": "#/$defs/NotPredicate"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Predicates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "predicates"
+        ],
+        "title": "AllPredicate",
+        "type": "object"
+      },
+      "AnyPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "any",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicates": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/AllPredicate",
+                  "any": "#/$defs/AnyPredicate",
+                  "domain_in": "#/$defs/DomainPredicate",
+                  "domain_not_in": "#/$defs/DomainPredicate",
+                  "eq": "#/$defs/ComparePredicate",
+                  "exists": "#/$defs/ExistsPredicate",
+                  "gt": "#/$defs/ComparePredicate",
+                  "gte": "#/$defs/ComparePredicate",
+                  "in": "#/$defs/SetPredicate",
+                  "lt": "#/$defs/ComparePredicate",
+                  "lte": "#/$defs/ComparePredicate",
+                  "min_len": "#/$defs/MinLenPredicate",
+                  "missing": "#/$defs/ExistsPredicate",
+                  "ne": "#/$defs/ComparePredicate",
+                  "not": "#/$defs/NotPredicate",
+                  "not_in": "#/$defs/SetPredicate",
+                  "regex": "#/$defs/RegexPredicate"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ExistsPredicate"
+                },
+                {
+                  "$ref": "#/$defs/ComparePredicate"
+                },
+                {
+                  "$ref": "#/$defs/SetPredicate"
+                },
+                {
+                  "$ref": "#/$defs/RegexPredicate"
+                },
+                {
+                  "$ref": "#/$defs/MinLenPredicate"
+                },
+                {
+                  "$ref": "#/$defs/DomainPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AllPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AnyPredicate"
+                },
+                {
+                  "$ref": "#/$defs/NotPredicate"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Predicates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "predicates"
+        ],
+        "title": "AnyPredicate",
+        "type": "object"
+      },
+      "Bands": {
+        "additionalProperties": false,
+        "description": "Thresholds, inclusive: value >= deny_at -> deny; >= escalate_at -> escalate; else allow.\n\nescalate_at == deny_at disables the escalate band.",
+        "properties": {
+          "deny_at": {
+            "title": "Deny At",
+            "type": "number"
+          },
+          "escalate_at": {
+            "title": "Escalate At",
+            "type": "number"
+          }
+        },
+        "required": [
+          "escalate_at",
+          "deny_at"
+        ],
+        "title": "Bands",
+        "type": "object"
+      },
+      "ChoiceOutcome": {
+        "additionalProperties": false,
+        "description": "Each option maps to a verdict; confidence below `min_confidence` escalates.",
+        "properties": {
+          "map": {
+            "additionalProperties": {
+              "$ref": "#/$defs/Verdict"
+            },
+            "minProperties": 1,
+            "title": "Map",
+            "type": "object"
+          },
+          "min_confidence": {
+            "default": 0.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Confidence",
+            "type": "number"
+          },
+          "type": {
+            "const": "choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "map"
+        ],
+        "title": "ChoiceOutcome",
+        "type": "object"
+      },
+      "ChoiceQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "option -> description",
+            "maxProperties": 255,
+            "minProperties": 1,
+            "title": "Criteria",
+            "type": "object"
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions",
+          "criteria"
+        ],
+        "title": "ChoiceQuestion",
+        "type": "object"
+      },
+      "ComparePredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "eq",
+              "ne",
+              "gt",
+              "gte",
+              "lt",
+              "lte"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "title": "ComparePredicate",
+        "type": "object"
+      },
+      "DeterministicCheck": {
+        "additionalProperties": false,
+        "description": "When `predicate` is true the rule's verdict is `verdict_when_true` and its Jev check\nis skipped; a deny short-circuits the whole decision. When false, the Jev check (if any)\ndecides, otherwise the rule allows.",
+        "properties": {
+          "predicate": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllPredicate",
+                "any": "#/$defs/AnyPredicate",
+                "domain_in": "#/$defs/DomainPredicate",
+                "domain_not_in": "#/$defs/DomainPredicate",
+                "eq": "#/$defs/ComparePredicate",
+                "exists": "#/$defs/ExistsPredicate",
+                "gt": "#/$defs/ComparePredicate",
+                "gte": "#/$defs/ComparePredicate",
+                "in": "#/$defs/SetPredicate",
+                "lt": "#/$defs/ComparePredicate",
+                "lte": "#/$defs/ComparePredicate",
+                "min_len": "#/$defs/MinLenPredicate",
+                "missing": "#/$defs/ExistsPredicate",
+                "ne": "#/$defs/ComparePredicate",
+                "not": "#/$defs/NotPredicate",
+                "not_in": "#/$defs/SetPredicate",
+                "regex": "#/$defs/RegexPredicate"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ExistsPredicate"
+              },
+              {
+                "$ref": "#/$defs/ComparePredicate"
+              },
+              {
+                "$ref": "#/$defs/SetPredicate"
+              },
+              {
+                "$ref": "#/$defs/RegexPredicate"
+              },
+              {
+                "$ref": "#/$defs/MinLenPredicate"
+              },
+              {
+                "$ref": "#/$defs/DomainPredicate"
+              },
+              {
+                "$ref": "#/$defs/AllPredicate"
+              },
+              {
+                "$ref": "#/$defs/AnyPredicate"
+              },
+              {
+                "$ref": "#/$defs/NotPredicate"
+              }
+            ],
+            "title": "Predicate"
+          },
+          "verdict_when_true": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "predicate",
+          "verdict_when_true"
+        ],
+        "title": "DeterministicCheck",
+        "type": "object"
+      },
+      "DomainPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "domains": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Domains",
+            "type": "array"
+          },
+          "op": {
+            "enum": [
+              "domain_in",
+              "domain_not_in"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "domains"
+        ],
+        "title": "DomainPredicate",
+        "type": "object"
+      },
+      "ExistsPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "exists",
+              "missing"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path"
+        ],
+        "title": "ExistsPredicate",
+        "type": "object"
+      },
+      "JevCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "default": "jev-latest",
+            "description": "Pinned version (jev-X.Y.Z) required for live rules",
+            "pattern": "^jev-(latest|preview|\\d+\\.\\d+\\.\\d+)$",
+            "title": "Model",
+            "type": "string"
+          },
+          "outcomes": {
+            "patternProperties": {
+              "^[a-z](?:_?[a-z0-9]){0,63}$": {
+                "discriminator": {
+                  "mapping": {
+                    "choice": "#/$defs/ChoiceOutcome",
+                    "noul": "#/$defs/NoulOutcome",
+                    "score": "#/$defs/ScoreOutcome"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/NoulOutcome"
+                  },
+                  {
+                    "$ref": "#/$defs/ChoiceOutcome"
+                  },
+                  {
+                    "$ref": "#/$defs/ScoreOutcome"
+                  }
+                ]
+              }
+            },
+            "title": "Outcomes",
+            "type": "object"
+          },
+          "questions": {
+            "minProperties": 1,
+            "patternProperties": {
+              "^[a-z](?:_?[a-z0-9]){0,63}$": {
+                "discriminator": {
+                  "mapping": {
+                    "choice": "#/$defs/ChoiceQuestion",
+                    "noul": "#/$defs/NoulQuestion",
+                    "score": "#/$defs/ScoreQuestion"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/NoulQuestion"
+                  },
+                  {
+                    "$ref": "#/$defs/ChoiceQuestion"
+                  },
+                  {
+                    "$ref": "#/$defs/ScoreQuestion"
+                  }
+                ]
+              }
+            },
+            "title": "Questions",
+            "type": "object"
+          },
+          "state_template": {
+            "description": "CheckRequest paths sent to Jev as state; nothing else is",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "State Template",
+            "type": "array"
+          }
+        },
+        "required": [
+          "questions",
+          "outcomes",
+          "state_template"
+        ],
+        "title": "JevCheck",
+        "type": "object"
+      },
+      "MinLenPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "min_len",
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "value": {
+            "minimum": 0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "title": "MinLenPredicate",
+        "type": "object"
+      },
+      "NotPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "not",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicate": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllPredicate",
+                "any": "#/$defs/AnyPredicate",
+                "domain_in": "#/$defs/DomainPredicate",
+                "domain_not_in": "#/$defs/DomainPredicate",
+                "eq": "#/$defs/ComparePredicate",
+                "exists": "#/$defs/ExistsPredicate",
+                "gt": "#/$defs/ComparePredicate",
+                "gte": "#/$defs/ComparePredicate",
+                "in": "#/$defs/SetPredicate",
+                "lt": "#/$defs/ComparePredicate",
+                "lte": "#/$defs/ComparePredicate",
+                "min_len": "#/$defs/MinLenPredicate",
+                "missing": "#/$defs/ExistsPredicate",
+                "ne": "#/$defs/ComparePredicate",
+                "not": "#/$defs/NotPredicate",
+                "not_in": "#/$defs/SetPredicate",
+                "regex": "#/$defs/RegexPredicate"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ExistsPredicate"
+              },
+              {
+                "$ref": "#/$defs/ComparePredicate"
+              },
+              {
+                "$ref": "#/$defs/SetPredicate"
+              },
+              {
+                "$ref": "#/$defs/RegexPredicate"
+              },
+              {
+                "$ref": "#/$defs/MinLenPredicate"
+              },
+              {
+                "$ref": "#/$defs/DomainPredicate"
+              },
+              {
+                "$ref": "#/$defs/AllPredicate"
+              },
+              {
+                "$ref": "#/$defs/AnyPredicate"
+              },
+              {
+                "$ref": "#/$defs/NotPredicate"
+              }
+            ],
+            "title": "Predicate"
+          }
+        },
+        "required": [
+          "op",
+          "predicate"
+        ],
+        "title": "NotPredicate",
+        "type": "object"
+      },
+      "NoulCriteria": {
+        "additionalProperties": false,
+        "properties": {
+          "false": {
+            "minLength": 1,
+            "title": "False",
+            "type": "string"
+          },
+          "true": {
+            "minLength": 1,
+            "title": "True",
+            "type": "string"
+          }
+        },
+        "required": [
+          "true",
+          "false"
+        ],
+        "title": "NoulCriteria",
+        "type": "object"
+      },
+      "NoulOutcome": {
+        "additionalProperties": false,
+        "description": "`high_is_bad`: bands apply to P(true). `low_is_bad`: bands apply to 1 - P(true).",
+        "properties": {
+          "bands": {
+            "$ref": "#/$defs/Bands"
+          },
+          "direction": {
+            "default": "high_is_bad",
+            "enum": [
+              "high_is_bad",
+              "low_is_bad"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "type": {
+            "const": "noul",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "bands"
+        ],
+        "title": "NoulOutcome",
+        "type": "object"
+      },
+      "NoulQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NoulCriteria"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "noul",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions"
+        ],
+        "title": "NoulQuestion",
+        "type": "object"
+      },
+      "RegexPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "regex",
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "pattern": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Pattern",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "pattern"
+        ],
+        "title": "RegexPredicate",
+        "type": "object"
+      },
+      "ScoreOutcome": {
+        "additionalProperties": false,
+        "description": "Bands on the expected score (a float in [0, levels-1]); low confidence escalates.",
+        "properties": {
+          "bands": {
+            "$ref": "#/$defs/Bands"
+          },
+          "min_confidence": {
+            "default": 0.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Confidence",
+            "type": "number"
+          },
+          "type": {
+            "const": "score",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "bands"
+        ],
+        "title": "ScoreOutcome",
+        "type": "object"
+      },
+      "ScoreQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "description": "level descriptions, level 0 first",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 2,
+            "title": "Criteria",
+            "type": "array"
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "score",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions",
+          "criteria"
+        ],
+        "title": "ScoreQuestion",
+        "type": "object"
+      },
+      "SetPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "in",
+              "not_in"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "values"
+        ],
+        "title": "SetPredicate",
+        "type": "object"
+      },
+      "Severity": {
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "title": "Severity",
+        "type": "string"
+      },
+      "Verdict": {
+        "enum": [
+          "allow",
+          "deny",
+          "escalate"
+        ],
+        "title": "Verdict",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "The versioned, hashed part of a rule: everything that can change a verdict.",
+    "properties": {
+      "applies_when": {
+        "anyOf": [
+          {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllPredicate",
+                "any": "#/$defs/AnyPredicate",
+                "domain_in": "#/$defs/DomainPredicate",
+                "domain_not_in": "#/$defs/DomainPredicate",
+                "eq": "#/$defs/ComparePredicate",
+                "exists": "#/$defs/ExistsPredicate",
+                "gt": "#/$defs/ComparePredicate",
+                "gte": "#/$defs/ComparePredicate",
+                "in": "#/$defs/SetPredicate",
+                "lt": "#/$defs/ComparePredicate",
+                "lte": "#/$defs/ComparePredicate",
+                "min_len": "#/$defs/MinLenPredicate",
+                "missing": "#/$defs/ExistsPredicate",
+                "ne": "#/$defs/ComparePredicate",
+                "not": "#/$defs/NotPredicate",
+                "not_in": "#/$defs/SetPredicate",
+                "regex": "#/$defs/RegexPredicate"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ExistsPredicate"
+              },
+              {
+                "$ref": "#/$defs/ComparePredicate"
+              },
+              {
+                "$ref": "#/$defs/SetPredicate"
+              },
+              {
+                "$ref": "#/$defs/RegexPredicate"
+              },
+              {
+                "$ref": "#/$defs/MinLenPredicate"
+              },
+              {
+                "$ref": "#/$defs/DomainPredicate"
+              },
+              {
+                "$ref": "#/$defs/AllPredicate"
+              },
+              {
+                "$ref": "#/$defs/AnyPredicate"
+              },
+              {
+                "$ref": "#/$defs/NotPredicate"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Cheap selector; absent = applies to every request at the gate",
+        "title": "Applies When"
+      },
+      "deterministic": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/DeterministicCheck"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "jev": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/JevCheck"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "on_error": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Verdict"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Verdict when Jev fails; absent = gate/severity default"
+      },
+      "on_missing": {
+        "$ref": "#/$defs/Verdict",
+        "default": "escalate"
+      },
+      "requires": {
+        "description": "Fields that must be present, else `on_missing`",
+        "items": {
+          "type": "string"
+        },
+        "title": "Requires",
+        "type": "array"
+      },
+      "severity": {
+        "$ref": "#/$defs/Severity",
+        "default": "medium"
+      }
+    },
+    "title": "RuleBody",
+    "type": "object"
+  },
+  "RulePack": {
+    "$defs": {
+      "AgentInfo": {
+        "additionalProperties": false,
+        "description": "Who is acting.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Summary of the agent's system prompt",
+            "title": "Purpose"
+          }
+        },
+        "title": "AgentInfo",
+        "type": "object"
+      },
+      "AllPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "all",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicates": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/AllPredicate",
+                  "any": "#/$defs/AnyPredicate",
+                  "domain_in": "#/$defs/DomainPredicate",
+                  "domain_not_in": "#/$defs/DomainPredicate",
+                  "eq": "#/$defs/ComparePredicate",
+                  "exists": "#/$defs/ExistsPredicate",
+                  "gt": "#/$defs/ComparePredicate",
+                  "gte": "#/$defs/ComparePredicate",
+                  "in": "#/$defs/SetPredicate",
+                  "lt": "#/$defs/ComparePredicate",
+                  "lte": "#/$defs/ComparePredicate",
+                  "min_len": "#/$defs/MinLenPredicate",
+                  "missing": "#/$defs/ExistsPredicate",
+                  "ne": "#/$defs/ComparePredicate",
+                  "not": "#/$defs/NotPredicate",
+                  "not_in": "#/$defs/SetPredicate",
+                  "regex": "#/$defs/RegexPredicate"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ExistsPredicate"
+                },
+                {
+                  "$ref": "#/$defs/ComparePredicate"
+                },
+                {
+                  "$ref": "#/$defs/SetPredicate"
+                },
+                {
+                  "$ref": "#/$defs/RegexPredicate"
+                },
+                {
+                  "$ref": "#/$defs/MinLenPredicate"
+                },
+                {
+                  "$ref": "#/$defs/DomainPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AllPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AnyPredicate"
+                },
+                {
+                  "$ref": "#/$defs/NotPredicate"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Predicates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "predicates"
+        ],
+        "title": "AllPredicate",
+        "type": "object"
+      },
+      "AnyPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "any",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicates": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/AllPredicate",
+                  "any": "#/$defs/AnyPredicate",
+                  "domain_in": "#/$defs/DomainPredicate",
+                  "domain_not_in": "#/$defs/DomainPredicate",
+                  "eq": "#/$defs/ComparePredicate",
+                  "exists": "#/$defs/ExistsPredicate",
+                  "gt": "#/$defs/ComparePredicate",
+                  "gte": "#/$defs/ComparePredicate",
+                  "in": "#/$defs/SetPredicate",
+                  "lt": "#/$defs/ComparePredicate",
+                  "lte": "#/$defs/ComparePredicate",
+                  "min_len": "#/$defs/MinLenPredicate",
+                  "missing": "#/$defs/ExistsPredicate",
+                  "ne": "#/$defs/ComparePredicate",
+                  "not": "#/$defs/NotPredicate",
+                  "not_in": "#/$defs/SetPredicate",
+                  "regex": "#/$defs/RegexPredicate"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ExistsPredicate"
+                },
+                {
+                  "$ref": "#/$defs/ComparePredicate"
+                },
+                {
+                  "$ref": "#/$defs/SetPredicate"
+                },
+                {
+                  "$ref": "#/$defs/RegexPredicate"
+                },
+                {
+                  "$ref": "#/$defs/MinLenPredicate"
+                },
+                {
+                  "$ref": "#/$defs/DomainPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AllPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AnyPredicate"
+                },
+                {
+                  "$ref": "#/$defs/NotPredicate"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Predicates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "predicates"
+        ],
+        "title": "AnyPredicate",
+        "type": "object"
+      },
+      "Bands": {
+        "additionalProperties": false,
+        "description": "Thresholds, inclusive: value >= deny_at -> deny; >= escalate_at -> escalate; else allow.\n\nescalate_at == deny_at disables the escalate band.",
+        "properties": {
+          "deny_at": {
+            "title": "Deny At",
+            "type": "number"
+          },
+          "escalate_at": {
+            "title": "Escalate At",
+            "type": "number"
+          }
+        },
+        "required": [
+          "escalate_at",
+          "deny_at"
+        ],
+        "title": "Bands",
+        "type": "object"
+      },
+      "CheckRequest": {
+        "additionalProperties": false,
+        "description": "Only `gate` and `request` are required; rules declare what else they need.",
+        "properties": {
+          "agent": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AgentInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Context"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "gate": {
+            "$ref": "#/$defs/Gate"
+          },
+          "history": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/HistoryItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "History"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The agent's stated justification",
+            "title": "Reason"
+          },
+          "request": {
+            "$ref": "#/$defs/RequestedAction"
+          }
+        },
+        "required": [
+          "gate",
+          "request"
+        ],
+        "title": "CheckRequest",
+        "type": "object"
+      },
+      "ChoiceOutcome": {
+        "additionalProperties": false,
+        "description": "Each option maps to a verdict; confidence below `min_confidence` escalates.",
+        "properties": {
+          "map": {
+            "additionalProperties": {
+              "$ref": "#/$defs/Verdict"
+            },
+            "minProperties": 1,
+            "title": "Map",
+            "type": "object"
+          },
+          "min_confidence": {
+            "default": 0.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Confidence",
+            "type": "number"
+          },
+          "type": {
+            "const": "choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "map"
+        ],
+        "title": "ChoiceOutcome",
+        "type": "object"
+      },
+      "ChoiceQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "option -> description",
+            "maxProperties": 255,
+            "minProperties": 1,
+            "title": "Criteria",
+            "type": "object"
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions",
+          "criteria"
+        ],
+        "title": "ChoiceQuestion",
+        "type": "object"
+      },
+      "ComparePredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "eq",
+              "ne",
+              "gt",
+              "gte",
+              "lt",
+              "lte"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "title": "ComparePredicate",
+        "type": "object"
+      },
+      "Context": {
+        "additionalProperties": false,
+        "description": "Why the agent is acting, if the host provides it.",
+        "properties": {
+          "recent_messages": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Recent Messages"
+          },
+          "user_goal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "User Goal"
+          }
+        },
+        "title": "Context",
+        "type": "object"
+      },
+      "DeterministicCheck": {
+        "additionalProperties": false,
+        "description": "When `predicate` is true the rule's verdict is `verdict_when_true` and its Jev check\nis skipped; a deny short-circuits the whole decision. When false, the Jev check (if any)\ndecides, otherwise the rule allows.",
+        "properties": {
+          "predicate": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllPredicate",
+                "any": "#/$defs/AnyPredicate",
+                "domain_in": "#/$defs/DomainPredicate",
+                "domain_not_in": "#/$defs/DomainPredicate",
+                "eq": "#/$defs/ComparePredicate",
+                "exists": "#/$defs/ExistsPredicate",
+                "gt": "#/$defs/ComparePredicate",
+                "gte": "#/$defs/ComparePredicate",
+                "in": "#/$defs/SetPredicate",
+                "lt": "#/$defs/ComparePredicate",
+                "lte": "#/$defs/ComparePredicate",
+                "min_len": "#/$defs/MinLenPredicate",
+                "missing": "#/$defs/ExistsPredicate",
+                "ne": "#/$defs/ComparePredicate",
+                "not": "#/$defs/NotPredicate",
+                "not_in": "#/$defs/SetPredicate",
+                "regex": "#/$defs/RegexPredicate"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ExistsPredicate"
+              },
+              {
+                "$ref": "#/$defs/ComparePredicate"
+              },
+              {
+                "$ref": "#/$defs/SetPredicate"
+              },
+              {
+                "$ref": "#/$defs/RegexPredicate"
+              },
+              {
+                "$ref": "#/$defs/MinLenPredicate"
+              },
+              {
+                "$ref": "#/$defs/DomainPredicate"
+              },
+              {
+                "$ref": "#/$defs/AllPredicate"
+              },
+              {
+                "$ref": "#/$defs/AnyPredicate"
+              },
+              {
+                "$ref": "#/$defs/NotPredicate"
+              }
+            ],
+            "title": "Predicate"
+          },
+          "verdict_when_true": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "predicate",
+          "verdict_when_true"
+        ],
+        "title": "DeterministicCheck",
+        "type": "object"
+      },
+      "DomainPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "domains": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Domains",
+            "type": "array"
+          },
+          "op": {
+            "enum": [
+              "domain_in",
+              "domain_not_in"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "domains"
+        ],
+        "title": "DomainPredicate",
+        "type": "object"
+      },
+      "ExistsPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "exists",
+              "missing"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path"
+        ],
+        "title": "ExistsPredicate",
+        "type": "object"
+      },
+      "Gate": {
+        "enum": [
+          "tool_call",
+          "egress",
+          "ingress"
+        ],
+        "title": "Gate",
+        "type": "string"
+      },
+      "HistoryItem": {
+        "additionalProperties": false,
+        "description": "A prior tool call in this session.",
+        "properties": {
+          "args": {
+            "additionalProperties": true,
+            "title": "Args",
+            "type": "object"
+          },
+          "result_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Result Summary"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool"
+        ],
+        "title": "HistoryItem",
+        "type": "object"
+      },
+      "JevCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "default": "jev-latest",
+            "description": "Pinned version (jev-X.Y.Z) required for live rules",
+            "pattern": "^jev-(latest|preview|\\d+\\.\\d+\\.\\d+)$",
+            "title": "Model",
+            "type": "string"
+          },
+          "outcomes": {
+            "patternProperties": {
+              "^[a-z](?:_?[a-z0-9]){0,63}$": {
+                "discriminator": {
+                  "mapping": {
+                    "choice": "#/$defs/ChoiceOutcome",
+                    "noul": "#/$defs/NoulOutcome",
+                    "score": "#/$defs/ScoreOutcome"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/NoulOutcome"
+                  },
+                  {
+                    "$ref": "#/$defs/ChoiceOutcome"
+                  },
+                  {
+                    "$ref": "#/$defs/ScoreOutcome"
+                  }
+                ]
+              }
+            },
+            "title": "Outcomes",
+            "type": "object"
+          },
+          "questions": {
+            "minProperties": 1,
+            "patternProperties": {
+              "^[a-z](?:_?[a-z0-9]){0,63}$": {
+                "discriminator": {
+                  "mapping": {
+                    "choice": "#/$defs/ChoiceQuestion",
+                    "noul": "#/$defs/NoulQuestion",
+                    "score": "#/$defs/ScoreQuestion"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/NoulQuestion"
+                  },
+                  {
+                    "$ref": "#/$defs/ChoiceQuestion"
+                  },
+                  {
+                    "$ref": "#/$defs/ScoreQuestion"
+                  }
+                ]
+              }
+            },
+            "title": "Questions",
+            "type": "object"
+          },
+          "state_template": {
+            "description": "CheckRequest paths sent to Jev as state; nothing else is",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "State Template",
+            "type": "array"
+          }
+        },
+        "required": [
+          "questions",
+          "outcomes",
+          "state_template"
+        ],
+        "title": "JevCheck",
+        "type": "object"
+      },
+      "MinLenPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "min_len",
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "value": {
+            "minimum": 0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "title": "MinLenPredicate",
+        "type": "object"
+      },
+      "NotPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "not",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicate": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllPredicate",
+                "any": "#/$defs/AnyPredicate",
+                "domain_in": "#/$defs/DomainPredicate",
+                "domain_not_in": "#/$defs/DomainPredicate",
+                "eq": "#/$defs/ComparePredicate",
+                "exists": "#/$defs/ExistsPredicate",
+                "gt": "#/$defs/ComparePredicate",
+                "gte": "#/$defs/ComparePredicate",
+                "in": "#/$defs/SetPredicate",
+                "lt": "#/$defs/ComparePredicate",
+                "lte": "#/$defs/ComparePredicate",
+                "min_len": "#/$defs/MinLenPredicate",
+                "missing": "#/$defs/ExistsPredicate",
+                "ne": "#/$defs/ComparePredicate",
+                "not": "#/$defs/NotPredicate",
+                "not_in": "#/$defs/SetPredicate",
+                "regex": "#/$defs/RegexPredicate"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ExistsPredicate"
+              },
+              {
+                "$ref": "#/$defs/ComparePredicate"
+              },
+              {
+                "$ref": "#/$defs/SetPredicate"
+              },
+              {
+                "$ref": "#/$defs/RegexPredicate"
+              },
+              {
+                "$ref": "#/$defs/MinLenPredicate"
+              },
+              {
+                "$ref": "#/$defs/DomainPredicate"
+              },
+              {
+                "$ref": "#/$defs/AllPredicate"
+              },
+              {
+                "$ref": "#/$defs/AnyPredicate"
+              },
+              {
+                "$ref": "#/$defs/NotPredicate"
+              }
+            ],
+            "title": "Predicate"
+          }
+        },
+        "required": [
+          "op",
+          "predicate"
+        ],
+        "title": "NotPredicate",
+        "type": "object"
+      },
+      "NoulCriteria": {
+        "additionalProperties": false,
+        "properties": {
+          "false": {
+            "minLength": 1,
+            "title": "False",
+            "type": "string"
+          },
+          "true": {
+            "minLength": 1,
+            "title": "True",
+            "type": "string"
+          }
+        },
+        "required": [
+          "true",
+          "false"
+        ],
+        "title": "NoulCriteria",
+        "type": "object"
+      },
+      "NoulOutcome": {
+        "additionalProperties": false,
+        "description": "`high_is_bad`: bands apply to P(true). `low_is_bad`: bands apply to 1 - P(true).",
+        "properties": {
+          "bands": {
+            "$ref": "#/$defs/Bands"
+          },
+          "direction": {
+            "default": "high_is_bad",
+            "enum": [
+              "high_is_bad",
+              "low_is_bad"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "type": {
+            "const": "noul",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "bands"
+        ],
+        "title": "NoulOutcome",
+        "type": "object"
+      },
+      "NoulQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NoulCriteria"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "noul",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions"
+        ],
+        "title": "NoulQuestion",
+        "type": "object"
+      },
+      "RegexPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "regex",
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "pattern": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Pattern",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "pattern"
+        ],
+        "title": "RegexPredicate",
+        "type": "object"
+      },
+      "RequestedAction": {
+        "additionalProperties": false,
+        "description": "What the agent wants to do now.",
+        "properties": {
+          "args": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Args"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Body"
+          },
+          "kind": {
+            "enum": [
+              "tool_call",
+              "external_call",
+              "content"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Method"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "RequestedAction",
+        "type": "object"
+      },
+      "RuleBody": {
+        "additionalProperties": false,
+        "description": "The versioned, hashed part of a rule: everything that can change a verdict.",
+        "properties": {
+          "applies_when": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "all": "#/$defs/AllPredicate",
+                    "any": "#/$defs/AnyPredicate",
+                    "domain_in": "#/$defs/DomainPredicate",
+                    "domain_not_in": "#/$defs/DomainPredicate",
+                    "eq": "#/$defs/ComparePredicate",
+                    "exists": "#/$defs/ExistsPredicate",
+                    "gt": "#/$defs/ComparePredicate",
+                    "gte": "#/$defs/ComparePredicate",
+                    "in": "#/$defs/SetPredicate",
+                    "lt": "#/$defs/ComparePredicate",
+                    "lte": "#/$defs/ComparePredicate",
+                    "min_len": "#/$defs/MinLenPredicate",
+                    "missing": "#/$defs/ExistsPredicate",
+                    "ne": "#/$defs/ComparePredicate",
+                    "not": "#/$defs/NotPredicate",
+                    "not_in": "#/$defs/SetPredicate",
+                    "regex": "#/$defs/RegexPredicate"
+                  },
+                  "propertyName": "op"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/ExistsPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/ComparePredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/SetPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/RegexPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/MinLenPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/DomainPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/AllPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/AnyPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/NotPredicate"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Cheap selector; absent = applies to every request at the gate",
+            "title": "Applies When"
+          },
+          "deterministic": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeterministicCheck"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "jev": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JevCheck"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "on_error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Verdict when Jev fails; absent = gate/severity default"
+          },
+          "on_missing": {
+            "$ref": "#/$defs/Verdict",
+            "default": "escalate"
+          },
+          "requires": {
+            "description": "Fields that must be present, else `on_missing`",
+            "items": {
+              "type": "string"
+            },
+            "title": "Requires",
+            "type": "array"
+          },
+          "severity": {
+            "$ref": "#/$defs/Severity",
+            "default": "medium"
+          }
+        },
+        "title": "RuleBody",
+        "type": "object"
+      },
+      "RuleSpec": {
+        "additionalProperties": false,
+        "description": "A rule as authored in YAML/JSON (rule packs, import/export).",
+        "properties": {
+          "body": {
+            "$ref": "#/$defs/RuleBody"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Explanation"
+          },
+          "gate": {
+            "$ref": "#/$defs/Gate"
+          },
+          "id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "source_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Text"
+          },
+          "tests": {
+            "items": {
+              "$ref": "#/$defs/TestCaseSpec"
+            },
+            "title": "Tests",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "gate",
+          "body"
+        ],
+        "title": "RuleSpec",
+        "type": "object"
+      },
+      "ScoreOutcome": {
+        "additionalProperties": false,
+        "description": "Bands on the expected score (a float in [0, levels-1]); low confidence escalates.",
+        "properties": {
+          "bands": {
+            "$ref": "#/$defs/Bands"
+          },
+          "min_confidence": {
+            "default": 0.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Confidence",
+            "type": "number"
+          },
+          "type": {
+            "const": "score",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "bands"
+        ],
+        "title": "ScoreOutcome",
+        "type": "object"
+      },
+      "ScoreQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "description": "level descriptions, level 0 first",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 2,
+            "title": "Criteria",
+            "type": "array"
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "score",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions",
+          "criteria"
+        ],
+        "title": "ScoreQuestion",
+        "type": "object"
+      },
+      "SetPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "in",
+              "not_in"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "values"
+        ],
+        "title": "SetPredicate",
+        "type": "object"
+      },
+      "Severity": {
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "title": "Severity",
+        "type": "string"
+      },
+      "TestCaseSpec": {
+        "additionalProperties": false,
+        "description": "A golden-set example: a check request and the verdict the rule(s) should give.",
+        "properties": {
+          "check_request": {
+            "$ref": "#/$defs/CheckRequest"
+          },
+          "expected_verdict": {
+            "$ref": "#/$defs/Verdict"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "origin": {
+            "default": "user",
+            "enum": [
+              "user",
+              "generated",
+              "playground"
+            ],
+            "title": "Origin",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "check_request",
+          "expected_verdict"
+        ],
+        "title": "TestCaseSpec",
+        "type": "object"
+      },
+      "Verdict": {
+        "enum": [
+          "allow",
+          "deny",
+          "escalate"
+        ],
+        "title": "Verdict",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "A file of rules. `schema` is our format version; unknown versions are rejected.",
+    "properties": {
+      "rules": {
+        "items": {
+          "$ref": "#/$defs/RuleSpec"
+        },
+        "minItems": 1,
+        "title": "Rules",
+        "type": "array"
+      },
+      "schema": {
+        "const": 1,
+        "default": 1,
+        "title": "Schema",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "rules"
+    ],
+    "title": "RulePack",
+    "type": "object"
+  },
+  "RuleVersion": {
+    "$defs": {
+      "AllPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "all",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicates": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/AllPredicate",
+                  "any": "#/$defs/AnyPredicate",
+                  "domain_in": "#/$defs/DomainPredicate",
+                  "domain_not_in": "#/$defs/DomainPredicate",
+                  "eq": "#/$defs/ComparePredicate",
+                  "exists": "#/$defs/ExistsPredicate",
+                  "gt": "#/$defs/ComparePredicate",
+                  "gte": "#/$defs/ComparePredicate",
+                  "in": "#/$defs/SetPredicate",
+                  "lt": "#/$defs/ComparePredicate",
+                  "lte": "#/$defs/ComparePredicate",
+                  "min_len": "#/$defs/MinLenPredicate",
+                  "missing": "#/$defs/ExistsPredicate",
+                  "ne": "#/$defs/ComparePredicate",
+                  "not": "#/$defs/NotPredicate",
+                  "not_in": "#/$defs/SetPredicate",
+                  "regex": "#/$defs/RegexPredicate"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ExistsPredicate"
+                },
+                {
+                  "$ref": "#/$defs/ComparePredicate"
+                },
+                {
+                  "$ref": "#/$defs/SetPredicate"
+                },
+                {
+                  "$ref": "#/$defs/RegexPredicate"
+                },
+                {
+                  "$ref": "#/$defs/MinLenPredicate"
+                },
+                {
+                  "$ref": "#/$defs/DomainPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AllPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AnyPredicate"
+                },
+                {
+                  "$ref": "#/$defs/NotPredicate"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Predicates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "predicates"
+        ],
+        "title": "AllPredicate",
+        "type": "object"
+      },
+      "AnyPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "any",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicates": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/AllPredicate",
+                  "any": "#/$defs/AnyPredicate",
+                  "domain_in": "#/$defs/DomainPredicate",
+                  "domain_not_in": "#/$defs/DomainPredicate",
+                  "eq": "#/$defs/ComparePredicate",
+                  "exists": "#/$defs/ExistsPredicate",
+                  "gt": "#/$defs/ComparePredicate",
+                  "gte": "#/$defs/ComparePredicate",
+                  "in": "#/$defs/SetPredicate",
+                  "lt": "#/$defs/ComparePredicate",
+                  "lte": "#/$defs/ComparePredicate",
+                  "min_len": "#/$defs/MinLenPredicate",
+                  "missing": "#/$defs/ExistsPredicate",
+                  "ne": "#/$defs/ComparePredicate",
+                  "not": "#/$defs/NotPredicate",
+                  "not_in": "#/$defs/SetPredicate",
+                  "regex": "#/$defs/RegexPredicate"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ExistsPredicate"
+                },
+                {
+                  "$ref": "#/$defs/ComparePredicate"
+                },
+                {
+                  "$ref": "#/$defs/SetPredicate"
+                },
+                {
+                  "$ref": "#/$defs/RegexPredicate"
+                },
+                {
+                  "$ref": "#/$defs/MinLenPredicate"
+                },
+                {
+                  "$ref": "#/$defs/DomainPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AllPredicate"
+                },
+                {
+                  "$ref": "#/$defs/AnyPredicate"
+                },
+                {
+                  "$ref": "#/$defs/NotPredicate"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Predicates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "predicates"
+        ],
+        "title": "AnyPredicate",
+        "type": "object"
+      },
+      "Bands": {
+        "additionalProperties": false,
+        "description": "Thresholds, inclusive: value >= deny_at -> deny; >= escalate_at -> escalate; else allow.\n\nescalate_at == deny_at disables the escalate band.",
+        "properties": {
+          "deny_at": {
+            "title": "Deny At",
+            "type": "number"
+          },
+          "escalate_at": {
+            "title": "Escalate At",
+            "type": "number"
+          }
+        },
+        "required": [
+          "escalate_at",
+          "deny_at"
+        ],
+        "title": "Bands",
+        "type": "object"
+      },
+      "ChoiceOutcome": {
+        "additionalProperties": false,
+        "description": "Each option maps to a verdict; confidence below `min_confidence` escalates.",
+        "properties": {
+          "map": {
+            "additionalProperties": {
+              "$ref": "#/$defs/Verdict"
+            },
+            "minProperties": 1,
+            "title": "Map",
+            "type": "object"
+          },
+          "min_confidence": {
+            "default": 0.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Confidence",
+            "type": "number"
+          },
+          "type": {
+            "const": "choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "map"
+        ],
+        "title": "ChoiceOutcome",
+        "type": "object"
+      },
+      "ChoiceQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "option -> description",
+            "maxProperties": 255,
+            "minProperties": 1,
+            "title": "Criteria",
+            "type": "object"
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions",
+          "criteria"
+        ],
+        "title": "ChoiceQuestion",
+        "type": "object"
+      },
+      "ComparePredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "eq",
+              "ne",
+              "gt",
+              "gte",
+              "lt",
+              "lte"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "title": "ComparePredicate",
+        "type": "object"
+      },
+      "DeterministicCheck": {
+        "additionalProperties": false,
+        "description": "When `predicate` is true the rule's verdict is `verdict_when_true` and its Jev check\nis skipped; a deny short-circuits the whole decision. When false, the Jev check (if any)\ndecides, otherwise the rule allows.",
+        "properties": {
+          "predicate": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllPredicate",
+                "any": "#/$defs/AnyPredicate",
+                "domain_in": "#/$defs/DomainPredicate",
+                "domain_not_in": "#/$defs/DomainPredicate",
+                "eq": "#/$defs/ComparePredicate",
+                "exists": "#/$defs/ExistsPredicate",
+                "gt": "#/$defs/ComparePredicate",
+                "gte": "#/$defs/ComparePredicate",
+                "in": "#/$defs/SetPredicate",
+                "lt": "#/$defs/ComparePredicate",
+                "lte": "#/$defs/ComparePredicate",
+                "min_len": "#/$defs/MinLenPredicate",
+                "missing": "#/$defs/ExistsPredicate",
+                "ne": "#/$defs/ComparePredicate",
+                "not": "#/$defs/NotPredicate",
+                "not_in": "#/$defs/SetPredicate",
+                "regex": "#/$defs/RegexPredicate"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ExistsPredicate"
+              },
+              {
+                "$ref": "#/$defs/ComparePredicate"
+              },
+              {
+                "$ref": "#/$defs/SetPredicate"
+              },
+              {
+                "$ref": "#/$defs/RegexPredicate"
+              },
+              {
+                "$ref": "#/$defs/MinLenPredicate"
+              },
+              {
+                "$ref": "#/$defs/DomainPredicate"
+              },
+              {
+                "$ref": "#/$defs/AllPredicate"
+              },
+              {
+                "$ref": "#/$defs/AnyPredicate"
+              },
+              {
+                "$ref": "#/$defs/NotPredicate"
+              }
+            ],
+            "title": "Predicate"
+          },
+          "verdict_when_true": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "predicate",
+          "verdict_when_true"
+        ],
+        "title": "DeterministicCheck",
+        "type": "object"
+      },
+      "DomainPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "domains": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Domains",
+            "type": "array"
+          },
+          "op": {
+            "enum": [
+              "domain_in",
+              "domain_not_in"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "domains"
+        ],
+        "title": "DomainPredicate",
+        "type": "object"
+      },
+      "ExistsPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "exists",
+              "missing"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path"
+        ],
+        "title": "ExistsPredicate",
+        "type": "object"
+      },
+      "JevCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "default": "jev-latest",
+            "description": "Pinned version (jev-X.Y.Z) required for live rules",
+            "pattern": "^jev-(latest|preview|\\d+\\.\\d+\\.\\d+)$",
+            "title": "Model",
+            "type": "string"
+          },
+          "outcomes": {
+            "patternProperties": {
+              "^[a-z](?:_?[a-z0-9]){0,63}$": {
+                "discriminator": {
+                  "mapping": {
+                    "choice": "#/$defs/ChoiceOutcome",
+                    "noul": "#/$defs/NoulOutcome",
+                    "score": "#/$defs/ScoreOutcome"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/NoulOutcome"
+                  },
+                  {
+                    "$ref": "#/$defs/ChoiceOutcome"
+                  },
+                  {
+                    "$ref": "#/$defs/ScoreOutcome"
+                  }
+                ]
+              }
+            },
+            "title": "Outcomes",
+            "type": "object"
+          },
+          "questions": {
+            "minProperties": 1,
+            "patternProperties": {
+              "^[a-z](?:_?[a-z0-9]){0,63}$": {
+                "discriminator": {
+                  "mapping": {
+                    "choice": "#/$defs/ChoiceQuestion",
+                    "noul": "#/$defs/NoulQuestion",
+                    "score": "#/$defs/ScoreQuestion"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/NoulQuestion"
+                  },
+                  {
+                    "$ref": "#/$defs/ChoiceQuestion"
+                  },
+                  {
+                    "$ref": "#/$defs/ScoreQuestion"
+                  }
+                ]
+              }
+            },
+            "title": "Questions",
+            "type": "object"
+          },
+          "state_template": {
+            "description": "CheckRequest paths sent to Jev as state; nothing else is",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "State Template",
+            "type": "array"
+          }
+        },
+        "required": [
+          "questions",
+          "outcomes",
+          "state_template"
+        ],
+        "title": "JevCheck",
+        "type": "object"
+      },
+      "MinLenPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "min_len",
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "value": {
+            "minimum": 0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "title": "MinLenPredicate",
+        "type": "object"
+      },
+      "NotPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "not",
+            "title": "Op",
+            "type": "string"
+          },
+          "predicate": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllPredicate",
+                "any": "#/$defs/AnyPredicate",
+                "domain_in": "#/$defs/DomainPredicate",
+                "domain_not_in": "#/$defs/DomainPredicate",
+                "eq": "#/$defs/ComparePredicate",
+                "exists": "#/$defs/ExistsPredicate",
+                "gt": "#/$defs/ComparePredicate",
+                "gte": "#/$defs/ComparePredicate",
+                "in": "#/$defs/SetPredicate",
+                "lt": "#/$defs/ComparePredicate",
+                "lte": "#/$defs/ComparePredicate",
+                "min_len": "#/$defs/MinLenPredicate",
+                "missing": "#/$defs/ExistsPredicate",
+                "ne": "#/$defs/ComparePredicate",
+                "not": "#/$defs/NotPredicate",
+                "not_in": "#/$defs/SetPredicate",
+                "regex": "#/$defs/RegexPredicate"
+              },
+              "propertyName": "op"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ExistsPredicate"
+              },
+              {
+                "$ref": "#/$defs/ComparePredicate"
+              },
+              {
+                "$ref": "#/$defs/SetPredicate"
+              },
+              {
+                "$ref": "#/$defs/RegexPredicate"
+              },
+              {
+                "$ref": "#/$defs/MinLenPredicate"
+              },
+              {
+                "$ref": "#/$defs/DomainPredicate"
+              },
+              {
+                "$ref": "#/$defs/AllPredicate"
+              },
+              {
+                "$ref": "#/$defs/AnyPredicate"
+              },
+              {
+                "$ref": "#/$defs/NotPredicate"
+              }
+            ],
+            "title": "Predicate"
+          }
+        },
+        "required": [
+          "op",
+          "predicate"
+        ],
+        "title": "NotPredicate",
+        "type": "object"
+      },
+      "NoulCriteria": {
+        "additionalProperties": false,
+        "properties": {
+          "false": {
+            "minLength": 1,
+            "title": "False",
+            "type": "string"
+          },
+          "true": {
+            "minLength": 1,
+            "title": "True",
+            "type": "string"
+          }
+        },
+        "required": [
+          "true",
+          "false"
+        ],
+        "title": "NoulCriteria",
+        "type": "object"
+      },
+      "NoulOutcome": {
+        "additionalProperties": false,
+        "description": "`high_is_bad`: bands apply to P(true). `low_is_bad`: bands apply to 1 - P(true).",
+        "properties": {
+          "bands": {
+            "$ref": "#/$defs/Bands"
+          },
+          "direction": {
+            "default": "high_is_bad",
+            "enum": [
+              "high_is_bad",
+              "low_is_bad"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "type": {
+            "const": "noul",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "bands"
+        ],
+        "title": "NoulOutcome",
+        "type": "object"
+      },
+      "NoulQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NoulCriteria"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "noul",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions"
+        ],
+        "title": "NoulQuestion",
+        "type": "object"
+      },
+      "RegexPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "regex",
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "pattern": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Pattern",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "pattern"
+        ],
+        "title": "RegexPredicate",
+        "type": "object"
+      },
+      "RuleBody": {
+        "additionalProperties": false,
+        "description": "The versioned, hashed part of a rule: everything that can change a verdict.",
+        "properties": {
+          "applies_when": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "all": "#/$defs/AllPredicate",
+                    "any": "#/$defs/AnyPredicate",
+                    "domain_in": "#/$defs/DomainPredicate",
+                    "domain_not_in": "#/$defs/DomainPredicate",
+                    "eq": "#/$defs/ComparePredicate",
+                    "exists": "#/$defs/ExistsPredicate",
+                    "gt": "#/$defs/ComparePredicate",
+                    "gte": "#/$defs/ComparePredicate",
+                    "in": "#/$defs/SetPredicate",
+                    "lt": "#/$defs/ComparePredicate",
+                    "lte": "#/$defs/ComparePredicate",
+                    "min_len": "#/$defs/MinLenPredicate",
+                    "missing": "#/$defs/ExistsPredicate",
+                    "ne": "#/$defs/ComparePredicate",
+                    "not": "#/$defs/NotPredicate",
+                    "not_in": "#/$defs/SetPredicate",
+                    "regex": "#/$defs/RegexPredicate"
+                  },
+                  "propertyName": "op"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/ExistsPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/ComparePredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/SetPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/RegexPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/MinLenPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/DomainPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/AllPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/AnyPredicate"
+                  },
+                  {
+                    "$ref": "#/$defs/NotPredicate"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Cheap selector; absent = applies to every request at the gate",
+            "title": "Applies When"
+          },
+          "deterministic": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeterministicCheck"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "jev": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JevCheck"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "on_error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Verdict when Jev fails; absent = gate/severity default"
+          },
+          "on_missing": {
+            "$ref": "#/$defs/Verdict",
+            "default": "escalate"
+          },
+          "requires": {
+            "description": "Fields that must be present, else `on_missing`",
+            "items": {
+              "type": "string"
+            },
+            "title": "Requires",
+            "type": "array"
+          },
+          "severity": {
+            "$ref": "#/$defs/Severity",
+            "default": "medium"
+          }
+        },
+        "title": "RuleBody",
+        "type": "object"
+      },
+      "ScoreOutcome": {
+        "additionalProperties": false,
+        "description": "Bands on the expected score (a float in [0, levels-1]); low confidence escalates.",
+        "properties": {
+          "bands": {
+            "$ref": "#/$defs/Bands"
+          },
+          "min_confidence": {
+            "default": 0.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Confidence",
+            "type": "number"
+          },
+          "type": {
+            "const": "score",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "bands"
+        ],
+        "title": "ScoreOutcome",
+        "type": "object"
+      },
+      "ScoreQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "description": "level descriptions, level 0 first",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 2,
+            "title": "Criteria",
+            "type": "array"
+          },
+          "instructions": {
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "type": {
+            "const": "score",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "instructions",
+          "criteria"
+        ],
+        "title": "ScoreQuestion",
+        "type": "object"
+      },
+      "SetPredicate": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "in",
+              "not_in"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "values"
+        ],
+        "title": "SetPredicate",
+        "type": "object"
+      },
+      "Severity": {
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "title": "Severity",
+        "type": "string"
+      },
+      "Verdict": {
+        "enum": [
+          "allow",
+          "deny",
+          "escalate"
+        ],
+        "title": "Verdict",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "body": {
+        "$ref": "#/$defs/RuleBody"
+      },
+      "content_hash": {
+        "title": "Content Hash",
+        "type": "string"
+      },
+      "created_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Created At"
+      },
+      "explanation": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Explanation"
+      },
+      "jev_model": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Jev Model"
+      },
+      "prompt_version": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Prompt Version"
+      },
+      "rule_id": {
+        "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+        "title": "Rule Id",
+        "type": "string"
+      },
+      "source_text": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Source Text"
+      },
+      "translator_model": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Translator Model"
+      },
+      "version": {
+        "minimum": 1,
+        "title": "Version",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "rule_id",
+      "version",
+      "body",
+      "content_hash"
+    ],
+    "title": "RuleVersion",
+    "type": "object"
+  }
+}
