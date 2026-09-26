@@ -54,3 +54,8 @@ export type Requirement = S['Requirement']
 export type RuleSpec = S['RuleSpec']
 export type SaveTranslation = S['SaveTranslation']
 export type RefineResult = S['RefineResult']
+
+export type TestRun = S['TestRun']
+export type TestResult = S['TestResult']
+export type CalibrationResult = S['CalibrationResult']
+export type QuestionCalibration = S['QuestionCalibration']

@@ -89,6 +89,7 @@ services:
     profiles: ["e2e"]
     environment:
       DB_PATH: /tmp/e2e/app.db
+      ENABLE_TEST_RESET: "true"
       # replay by default; `make e2e-live` / `make e2e-record` switch mode and pass the key.
       JEV_MODE: ${E2E_JEV_MODE:-replay}
       TYPESAFE_API_KEY: ${E2E_JEV_KEY:-}

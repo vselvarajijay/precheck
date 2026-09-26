@@ -1,4 +1,6 @@
-import { expect, expectNoSeriousA11yViolations, test } from './fixtures'
+import { expect, expectNoSeriousA11yViolations, resetDb, test } from './fixtures'
+
+test.beforeEach(async ({ request }) => resetDb(request))
 
 // Must match backend/tests/translator_eval/cases/01-refund-limit-card-reason.yaml exactly:
 // the Claude responses are replayed from recordings keyed by the request.
