@@ -1,0 +1,9 @@
+{
+  "gate": "tool_call",
+  "agent": { "id": "support-bot", "purpose": "Handles customer support for orders and refunds" },
+  "request": {
+    "kind": "tool_call",
+    "tool": "issue_refund",
+    "args": { "order_id": "1234", "amount": 100, "destination": "Visa ending 4242" }
+  }
+}
