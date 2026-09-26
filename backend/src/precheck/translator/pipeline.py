@@ -149,6 +149,13 @@ def repair_message(errors: list[str]) -> str:
 Progress = Callable[[str], Awaitable[None]]
 
 
+class GeneratedTests(BaseModel):
+    tests: list[TranslatedTest]
+    errors: list[str] = Field(default_factory=list)
+    usage: LLMUsage = Field(default_factory=LLMUsage)
+    cost_usd: float = 0.0
+
+
 class RefineResult(BaseModel):
     rule: TranslatedRule | None = None
     errors: list[str] = Field(default_factory=list)
@@ -178,7 +185,7 @@ class Translator:
     ) -> None:
         self.llm = llm
         self.existing = existing or []
-        self.generate_tests = generate_tests
+        self.with_tests = generate_tests
         self.progress = progress
         self.usage = LLMUsage()
 
@@ -226,6 +233,29 @@ class Translator:
             result.usage = self.usage
             result.cost_usd = round(self.usage.cost_usd(self.llm.model), 6)
         return result
+
+    async def generate_tests(self, spec: RuleSpec, tools: list[str]) -> GeneratedTests:
+        """Step 3 alone, for an existing rule (e.g. to grow its golden set)."""
+        self.usage = LLMUsage()
+        inp = TranslateInput(
+            text=spec.source_text or spec.explanation or spec.name,
+            gate_hint=spec.gate,
+            tools=tools,
+        )
+        rules_json = json.dumps([spec.model_dump(mode="json", by_alias=True, exclude_none=True)])
+        try:
+            text = await self._step(
+                "tests", [{"role": "user", "content": tests_message(inp, rules_json)}]
+            )
+            tests, errors = self._convert_tests(text, {spec.id: spec}, inp)
+        finally:
+            usage = self.usage
+        return GeneratedTests(
+            tests=tests,
+            errors=errors,
+            usage=usage,
+            cost_usd=round(usage.cost_usd(self.llm.model), 6),
+        )
 
     async def _step(self, step: str, messages: list[dict[str, Any]]) -> str:
         await self._emit(step)
@@ -287,7 +317,7 @@ class Translator:
         if not specs:
             return
         result.status = "translated"
-        if not self.generate_tests:
+        if not self.with_tests:
             return
 
         # Step 3: tests for the valid rules. Invalid tests are dropped with a warning.

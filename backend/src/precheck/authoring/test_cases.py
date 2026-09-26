@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from precheck.authoring.errors import NotFoundError
-from precheck.db.models import RuleRow, TestCaseRow
+from precheck.db.models import RuleRow, TestCaseRow, TestResultRow
 from precheck.schema import CheckRequest, Verdict
 
 Origin = Literal["user", "generated", "playground"]
@@ -24,6 +24,15 @@ class TestCaseCreate(BaseModel):
     check_request: CheckRequest
     expected_verdict: Verdict
     origin: Origin = "user"
+
+
+class TestCaseUpdate(BaseModel):
+    __test__ = False
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    check_request: CheckRequest | None = None
+    expected_verdict: Verdict | None = None
 
 
 class TestCase(BaseModel):
@@ -70,6 +79,40 @@ class TestCaseService:
         self.s.add(row)
         self.s.flush()
         return _out(row)
+
+    def _row(self, case_id: str) -> TestCaseRow:
+        row = self.s.get(TestCaseRow, case_id)
+        if row is None:
+            raise NotFoundError(f"test case {case_id!r} not found")
+        return row
+
+    def get(self, case_id: str) -> TestCase:
+        return _out(self._row(case_id))
+
+    def update(self, case_id: str, data: TestCaseUpdate) -> TestCase:
+        row = self._row(case_id)
+        if data.name is not None:
+            row.name = data.name
+        if data.check_request is not None:
+            row.check_request_json = data.check_request.model_dump(mode="json", exclude_none=True)
+        if data.expected_verdict is not None:
+            row.expected_verdict = data.expected_verdict.value
+        self.s.flush()
+        return _out(row)
+
+    def delete(self, case_id: str) -> None:
+        row = self._row(case_id)
+        for result in self.s.scalars(
+            select(TestResultRow).where(TestResultRow.test_case_id == case_id)
+        ):
+            self.s.delete(result)
+        self.s.delete(row)
+        self.s.flush()
+
+    def list_all(self) -> list[TestCase]:
+        return [
+            _out(r) for r in self.s.scalars(select(TestCaseRow).order_by(TestCaseRow.created_at))
+        ]
 
     def list_for_rule(self, rule_id: str | None) -> list[TestCase]:
         stmt = select(TestCaseRow).order_by(TestCaseRow.created_at)

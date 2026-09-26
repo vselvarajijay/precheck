@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     llm_mode: Literal["live", "record", "replay", "cache"] = "live"
     llm_fixtures_dir: Path = REPO_ROOT / "backend" / "tests" / "fixtures" / "llm"
     examples_dir: Path = REPO_ROOT / "backend" / "examples"
+    # Only the isolated e2e stack sets this: exposes POST /api/testing/reset.
+    enable_test_reset: bool = False
     db_path: Path = REPO_ROOT / "data" / "app.db"
     # 0.0.0.0 inside containers; safety comes from publishing ports on 127.0.0.1 only.
     host: str = "0.0.0.0"
