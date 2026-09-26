@@ -27,17 +27,23 @@ ps:
 
 test: test-backend test-frontend   ## Unit + integration tests, offline (network_mode: none)
 
+PY_PACKAGES = core translator server mcp-proxy lab
+PKG ?= $(PY_PACKAGES)
+
+# Each package's tests run as their own pytest session (packages/<pkg>/tests), then the
+# repo-level layering checks (tests/). PKG=server narrows it; ARGS go to pytest.
 test-backend:
-	$(RUN_API) pytest $(ARGS)
+	$(RUN_API) sh -c 'for p in $(PKG); do echo "== $$p"; (cd packages/$$p && pytest $(ARGS)) || exit 1; done; \
+	  [ "$(PKG)" != "$(PY_PACKAGES)" ] || pytest -q tests'
 
 test-frontend:
 	$(RUN_WEB) pnpm test
 
 test-live:     ## Tests that call real Jev / Anthropic (needs .env keys; costs money)
-	$(COMPOSE) run --rm --no-deps --entrypoint "" api pytest -m live $(ARGS)
+	$(COMPOSE) run --rm --no-deps --entrypoint "" api sh -c 'for p in $(PKG); do (cd packages/$$p && pytest -m live $(ARGS)) || exit 1; done'
 
-pytest:        ## make pytest ARGS='-k health -v'
-	$(RUN_API) pytest $(ARGS)
+pytest:        ## make pytest PKG=server ARGS='-k health -v'
+	$(MAKE) test-backend PKG="$(PKG)" ARGS="$(ARGS)"
 
 lint:
 	$(RUN_API) sh -c "ruff check . && ruff format --check ."
@@ -50,10 +56,10 @@ typecheck:
 	$(RUN_API) mypy
 	$(RUN_WEB) pnpm typecheck
 
-gen-types:     ## Backend OpenAPI -> frontend/src/api/schema.d.ts
-	$(RUN_API) python -m precheck.api.openapi > frontend/src/api/openapi.json
+gen-types:     ## Server OpenAPI -> apps/web/src/shared/api/schema.d.ts
+	$(RUN_API) python -m precheck.server.api.openapi > apps/web/src/shared/api/openapi.json
 	$(RUN_WEB) pnpm gen-types
-	rm -f frontend/src/api/openapi.json
+	rm -f apps/web/src/shared/api/openapi.json
 
 e2e:           ## Playwright against an isolated stack (fresh DB, Jev replay); ARGS passed to playwright
 	$(COMPOSE) --profile e2e rm -sf $(E2E_STACK) >/dev/null 2>&1 || true
@@ -67,7 +73,7 @@ e2e-live-llm:  ## e2e with real Jev AND real Claude translations (costs more; ~$
 	E2E_JEV_MODE=live E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" \
 	  E2E_LLM_MODE=live E2E_LLM_KEY="$$(grep '^ANTHROPIC_API_KEY=' .env | cut -d= -f2-)" $(MAKE) e2e
 
-e2e-record:    ## e2e with real Jev calls, saving fixtures under backend/tests/fixtures/jev
+e2e-record:    ## e2e with real Jev calls, saving fixtures under fixtures/jev
 	E2E_JEV_MODE=record E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" $(MAKE) e2e
 
 eval-translator: ## Score the translator on the eval corpus (live Claude; LLM_MODE=cache reuses recordings)
@@ -77,7 +83,7 @@ translator-roundtrip: ## Translate with tests, then run the generated tests thro
 	$(COMPOSE) run --rm --no-deps --entrypoint "" -e LLM_MODE=$${LLM_MODE:-cache} api python -m precheck.translator.roundtrip $(ARGS)
 
 bench-proxy:   ## Proxy overhead vs direct tool calls (needs `make up`); ARGS='--jev' adds a Jev-judged call
-	$(COMPOSE) run --rm --no-deps --entrypoint "" api python -m precheck.enforcement.bench \
+	$(COMPOSE) run --rm --no-deps --entrypoint "" api python -m precheck.mcp_proxy.bench \
 	  --tools http://tools:8100/mcp --proxy http://proxy:8200/mcp $(ARGS)
 
 E2E_STACK = api-e2e tools-e2e proxy-e2e agent-e2e web-e2e
@@ -87,7 +93,7 @@ test-scenarios: ## All lab scenarios, scripted, on a fresh stack (Jev replay; LI
 	$(COMPOSE) --profile e2e rm -sf $(E2E_STACK) >/dev/null 2>&1 || true
 	E2E_JEV_MODE=$(SCENARIO_JEV_MODE) E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" \
 	  $(COMPOSE) --profile e2e up -d --build --wait api-e2e tools-e2e proxy-e2e
-	$(COMPOSE) --profile e2e run --rm --no-deps --entrypoint "" api-e2e python -m precheck.labagent.suite \
+	$(COMPOSE) --profile e2e run --rm --no-deps --entrypoint "" api-e2e python -m precheck.lab.agent.suite \
 	  --prepare --api http://api-e2e:8000 --proxy http://proxy-e2e:8200/mcp --tools http://tools-e2e:8100 $(ARGS); \
 	  status=$$?; $(COMPOSE) --profile e2e rm -sf $(E2E_STACK) >/dev/null 2>&1; exit $$status
 

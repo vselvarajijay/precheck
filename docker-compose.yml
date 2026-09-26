@@ -7,7 +7,7 @@ name: precheck
 x-backend: &backend
   build:
     context: .
-    dockerfile: backend/Dockerfile
+    dockerfile: deploy/python.Dockerfile
     target: dev
   image: precheck-backend:dev
   env_file:
@@ -19,8 +19,8 @@ x-backend: &backend
     TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   volumes:
-    - ./backend:/app/backend
-    - ./data:/app/data
+    # The whole repo (packages, examples, fixtures, config); the venv lives in /opt/venv.
+    - .:/app
 
 services:
   api:
@@ -43,7 +43,7 @@ services:
   authoring-mcp:
     <<: *backend
     # Agents manage rules here (list, translate, test, PROPOSE). No publish tool by design.
-    command: ["python", "-m", "precheck.mcp.authoring", "--transport", "http", "--port", "8001"]
+    command: ["python", "-m", "precheck.server.mcp.authoring", "--transport", "http", "--port", "8001"]
     ports:
       - "127.0.0.1:8001:8001"
     depends_on:
@@ -59,7 +59,7 @@ services:
   tools:
     <<: *backend
     # Mock business tools (no real side effects) behind MCP; call log at /calls.
-    command: ["python", "-m", "precheck.labtools.server", "--port", "8100"]
+    command: ["python", "-m", "precheck.lab.tools.server", "--port", "8100"]
     entrypoint: []
     ports:
       - "127.0.0.1:8100:8100"
@@ -73,7 +73,7 @@ services:
   proxy:
     <<: *backend
     # Enforcement MCP proxy: agents connect here; checks every call against live rules.
-    command: ["python", "-m", "precheck.enforcement.mcp_proxy", "--port", "8200"]
+    command: ["python", "-m", "precheck.mcp_proxy", "--port", "8200"]
     entrypoint: []
     environment:
       TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
@@ -96,7 +96,7 @@ services:
   agent:
     <<: *backend
     # Test agent (scripted scenarios + Claude LLM mode); talks only to the proxy.
-    command: ["uvicorn", "precheck.labagent.service:app", "--host", "0.0.0.0", "--port", "8300"]
+    command: ["uvicorn", "precheck.lab.agent.service:app", "--host", "0.0.0.0", "--port", "8300"]
     entrypoint: []
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -118,7 +118,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: frontend/Dockerfile
+      dockerfile: deploy/web.Dockerfile
       target: dev
     image: precheck-frontend:dev
     environment:
@@ -126,7 +126,7 @@ services:
     ports:
       - "127.0.0.1:5173:5173"
     volumes:
-      - ./frontend:/app
+      - ./apps/web:/app
       - /app/node_modules
     depends_on:
       api:
@@ -155,14 +155,14 @@ services:
     image: precheck-frontend:dev
     build:
       context: .
-      dockerfile: frontend/Dockerfile
+      dockerfile: deploy/web.Dockerfile
       target: dev
     profiles: ["test"]
     network_mode: none
     environment:
       CI: "true"
     volumes:
-      - ./frontend:/app
+      - ./apps/web:/app
       - /app/node_modules
     command: ["pnpm", "test"]
 
@@ -183,7 +183,7 @@ services:
       ANTHROPIC_API_KEY: ${E2E_LLM_KEY:-}
     tmpfs:
       - /tmp/e2e:uid=1000,gid=1000
-    command: ["uvicorn", "precheck.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "precheck.server.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
       interval: 3s
@@ -193,7 +193,7 @@ services:
   tools-e2e:
     <<: *backend
     profiles: ["e2e"]
-    command: ["python", "-m", "precheck.labtools.server", "--port", "8100"]
+    command: ["python", "-m", "precheck.lab.tools.server", "--port", "8100"]
     entrypoint: []
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=3)"]
@@ -204,7 +204,7 @@ services:
   proxy-e2e:
     <<: *backend
     profiles: ["e2e"]
-    command: ["python", "-m", "precheck.enforcement.mcp_proxy", "--port", "8200"]
+    command: ["python", "-m", "precheck.mcp_proxy", "--port", "8200"]
     entrypoint: []
     environment:
       API_URL: http://api-e2e:8000
@@ -227,7 +227,7 @@ services:
   agent-e2e:
     <<: *backend
     profiles: ["e2e"]
-    command: ["uvicorn", "precheck.labagent.service:app", "--host", "0.0.0.0", "--port", "8300"]
+    command: ["uvicorn", "precheck.lab.agent.service:app", "--host", "0.0.0.0", "--port", "8300"]
     entrypoint: []
     environment:
       API_URL: http://api-e2e:8000
@@ -248,13 +248,13 @@ services:
     image: precheck-frontend:dev
     build:
       context: .
-      dockerfile: frontend/Dockerfile
+      dockerfile: deploy/web.Dockerfile
       target: dev
     profiles: ["e2e"]
     environment:
       API_URL: http://api-e2e:8000
     volumes:
-      - ./frontend:/app
+      - ./apps/web:/app
       - /app/node_modules
     depends_on:
       api-e2e:
@@ -268,7 +268,7 @@ services:
   e2e:
     build:
       context: .
-      dockerfile: frontend/Dockerfile
+      dockerfile: deploy/web.Dockerfile
       target: e2e
     image: precheck-e2e:dev
     profiles: ["e2e"]
@@ -278,9 +278,9 @@ services:
       E2E_PROXY_URL: http://proxy-e2e:8200
       E2E_TOOLS_URL: http://tools-e2e:8100
     volumes:
-      - ./frontend/e2e:/app/e2e
-      - ./frontend/playwright.config.ts:/app/playwright.config.ts
-      - ./frontend/test-results:/app/test-results
+      - ./apps/web/e2e:/app/e2e
+      - ./apps/web/playwright.config.ts:/app/playwright.config.ts
+      - ./apps/web/test-results:/app/test-results
     depends_on:
       web-e2e:
         condition: service_healthy

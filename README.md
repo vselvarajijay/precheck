@@ -39,11 +39,27 @@ make typecheck   # mypy (strict) + tsc
 make e2e         # Playwright against the running stack
 make gen-types   # regenerate frontend API types from the backend OpenAPI schema
 make test-live   # tests that call real Jev / Anthropic (uses your keys; costs money)
-make pytest ARGS='-k health -v'
+make pytest PKG=server ARGS='-k health -v'
 ```
 
-Layout: `backend/` (Python 3.12, FastAPI, Pydantic v2, SQLAlchemy, uv) and
-`frontend/` (Vite, React, TypeScript, Tailwind, shadcn/ui, TanStack Query).
+### Layout
+
+A uv workspace of Python packages sharing the `precheck` namespace, plus the web app:
+
+| Path | Package | What it is | May import |
+|------|---------|------------|------------|
+| `packages/core` | `precheck-core` | `precheck.core`: rule schema, Jev client, decision engine | — |
+| `packages/translator` | `precheck-translator` | `precheck.translator`: business case → rules (Claude) | core |
+| `packages/server` | `precheck-server` | `precheck.server`: authoring API, rule store, authoring MCP | core, translator |
+| `packages/mcp-proxy` | `precheck-mcp-proxy` | `precheck.mcp_proxy`: enforcement proxy in front of MCP tools | core |
+| `packages/lab` | `precheck-lab` | `precheck.lab`: mock tools + test agent (dev only) | core |
+| `apps/web` | — | React UI, grouped by feature (`src/features/*`, `src/shared/*`) | — |
+
+Adapters and the lab talk to the server over HTTP only; `tests/test_layering.py` enforces
+the import rules. Shared data lives at the root: `examples/` (rule packs, scenarios,
+playground requests) and `fixtures/` (recorded Jev/Claude responses for replay mode).
+Dockerfiles are in `deploy/`. Each package keeps its tests in `packages/<pkg>/tests`;
+`make pytest PKG=server ARGS='-k health'` runs one package.
 
 ## Privacy
 
