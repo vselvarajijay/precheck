@@ -1,0 +1,39 @@
+[project]
+name = "precheck-server"
+version = "0.1.0"
+description = "Pre-check control plane: authoring API, rule store, authoring MCP server"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+dependencies = [
+    "precheck-core",
+    "precheck-translator",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "httpx>=0.27",
+    "mcp>=1.2",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+precheck-mcp = "precheck.server.mcp.authoring:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# `precheck` is a PEP 420 namespace shared by all packages; this one ships one portion.
+[tool.hatch.build.targets.wheel]
+packages = ["src/precheck"]
+
+[tool.uv.sources]
+precheck-core = { workspace = true }
+precheck-translator = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: calls real external APIs (Jev/Anthropic); run with -m live"]
+addopts = "-m 'not live' -ra"

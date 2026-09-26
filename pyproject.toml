@@ -1,0 +1,84 @@
+# uv workspace root: dev tooling and shared config. Installs every package for development.
+[project]
+name = "precheck-workspace"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "precheck-core",
+    "precheck-translator",
+    "precheck-server",
+    "precheck-mcp-proxy",
+    "precheck-lab",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+precheck-core = { workspace = true }
+precheck-translator = { workspace = true }
+precheck-server = { workspace = true }
+precheck-mcp-proxy = { workspace = true }
+precheck-lab = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "respx>=0.21",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-pyyaml",
+    "hypothesis>=6.100",
+]
+
+# Shared pytest defaults; each package runs as its own session (see Makefile test-backend).
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: calls real external APIs (Jev/Anthropic); run with -m live"]
+addopts = "-m 'not live' -ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["apps"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF012"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["precheck"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["E501"]
+"tests/**" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+explicit_package_bases = true
+mypy_path = [
+    "packages/core/src",
+    "packages/translator/src",
+    "packages/server/src",
+    "packages/mcp-proxy/src",
+    "packages/lab/src",
+]
+files = [
+    "packages/core/src",
+    "packages/translator/src",
+    "packages/server/src",
+    "packages/mcp-proxy/src",
+    "packages/lab/src",
+]
+
+[[tool.mypy.overrides]]
+module = ["re2"]
+ignore_missing_imports = true

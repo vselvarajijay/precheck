@@ -22,6 +22,6 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-frontend/test-results/
-frontend/playwright-report/
-frontend/src/api/openapi.json
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/src/shared/api/openapi.json

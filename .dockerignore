@@ -4,9 +4,9 @@
 **/.pytest_cache
 **/.mypy_cache
 **/.ruff_cache
-frontend/dist
-frontend/test-results
-frontend/playwright-report
+apps/web/dist
+apps/web/test-results
+apps/web/playwright-report
 data
 .git
 .env

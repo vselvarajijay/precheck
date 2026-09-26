@@ -1,0 +1,40 @@
+[project]
+name = "precheck-lab"
+version = "0.1.0"
+description = "Local lab: mock business tools and a scripted/LLM test agent (dev only)"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+dependencies = [
+    "precheck-core",
+    "mcp>=1.2",
+    "httpx>=0.27",
+    "anthropic>=1.8.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+]
+
+# Dev/demo tooling; never published.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# `precheck` is a PEP 420 namespace shared by all packages; this one ships one portion.
+[tool.hatch.build.targets.wheel]
+packages = ["src/precheck"]
+
+[dependency-groups]
+# Lab tests drive the real proxy and seed the server.
+test = ["precheck-mcp-proxy", "precheck-server"]
+
+[tool.uv.sources]
+precheck-core = { workspace = true }
+precheck-mcp-proxy = { workspace = true }
+precheck-server = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: calls real external APIs (Jev/Anthropic); run with -m live"]
+addopts = "-m 'not live' -ra"
