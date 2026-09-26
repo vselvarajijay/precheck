@@ -5,7 +5,7 @@ RUN_WEB  = $(COMPOSE) --profile test run --rm --no-deps --build web-test
 ARGS ?=
 
 .PHONY: up dev down logs build ps test test-backend test-frontend test-live pytest lint typecheck \
-        fmt gen-types e2e e2e-live e2e-live-llm e2e-record eval-translator translator-roundtrip bench-proxy sh-api sh-web
+        fmt gen-types e2e e2e-live e2e-live-llm e2e-record eval-translator translator-roundtrip bench-proxy test-scenarios sh-api sh-web
 
 up:            ## Start the stack in the background
 	$(COMPOSE) up -d --build --wait
@@ -56,9 +56,9 @@ gen-types:     ## Backend OpenAPI -> frontend/src/api/schema.d.ts
 	rm -f frontend/src/api/openapi.json
 
 e2e:           ## Playwright against an isolated stack (fresh DB, Jev replay); ARGS passed to playwright
-	$(COMPOSE) --profile e2e rm -sf api-e2e web-e2e >/dev/null 2>&1 || true
+	$(COMPOSE) --profile e2e rm -sf $(E2E_STACK) >/dev/null 2>&1 || true
 	$(COMPOSE) --profile e2e run --rm --build e2e pnpm exec playwright test $(ARGS); \
-	  status=$$?; $(COMPOSE) --profile e2e rm -sf api-e2e web-e2e >/dev/null 2>&1; exit $$status
+	  status=$$?; $(COMPOSE) --profile e2e rm -sf $(E2E_STACK) >/dev/null 2>&1; exit $$status
 
 e2e-live:      ## e2e with real Jev calls (uses TYPESAFE_API_KEY from .env; costs a little)
 	E2E_JEV_MODE=live E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" $(MAKE) e2e
@@ -79,6 +79,17 @@ translator-roundtrip: ## Translate with tests, then run the generated tests thro
 bench-proxy:   ## Proxy overhead vs direct tool calls (needs `make up`); ARGS='--jev' adds a Jev-judged call
 	$(COMPOSE) run --rm --no-deps --entrypoint "" api python -m precheck.enforcement.bench \
 	  --tools http://tools:8100/mcp --proxy http://proxy:8200/mcp $(ARGS)
+
+E2E_STACK = api-e2e tools-e2e proxy-e2e agent-e2e web-e2e
+SCENARIO_JEV_MODE = $(if $(RECORD),record,$(if $(LIVE),live,replay))
+
+test-scenarios: ## All lab scenarios, scripted, on a fresh stack (Jev replay; LIVE=1 real Jev; RECORD=1 record)
+	$(COMPOSE) --profile e2e rm -sf $(E2E_STACK) >/dev/null 2>&1 || true
+	E2E_JEV_MODE=$(SCENARIO_JEV_MODE) E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" \
+	  $(COMPOSE) --profile e2e up -d --build --wait api-e2e tools-e2e proxy-e2e
+	$(COMPOSE) --profile e2e run --rm --no-deps --entrypoint "" api-e2e python -m precheck.labagent.suite \
+	  --prepare --api http://api-e2e:8000 --proxy http://proxy-e2e:8200/mcp --tools http://tools-e2e:8100 $(ARGS); \
+	  status=$$?; $(COMPOSE) --profile e2e rm -sf $(E2E_STACK) >/dev/null 2>&1; exit $$status
 
 sh-api:
 	$(COMPOSE) exec api sh

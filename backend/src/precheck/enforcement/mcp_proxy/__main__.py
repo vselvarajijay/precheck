@@ -18,7 +18,7 @@ from precheck.enforcement.mcp_proxy.server import ProxyServer
 from precheck.enforcement.policy_source import HttpPolicySource
 from precheck.jev import make_jev_client
 
-ALLOWED_HOSTS = ["127.0.0.1:*", "localhost:*", "[::1]:*", "proxy:*"]
+ALLOWED_HOSTS = ["127.0.0.1:*", "localhost:*", "[::1]:*", "proxy:*", "proxy-e2e:*"]
 
 
 def http_upstream(url: str) -> Any:

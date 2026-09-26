@@ -162,7 +162,7 @@ def build_server(log: CallLog | None = None) -> tuple[MCPServer, CallLog]:
     return server, log
 
 
-ALLOWED_HOSTS = ["127.0.0.1:*", "localhost:*", "[::1]:*", "tools:*"]
+ALLOWED_HOSTS = ["127.0.0.1:*", "localhost:*", "[::1]:*", "tools:*", "tools-e2e:*"]
 
 
 def main(argv: list[str] | None = None) -> None:
