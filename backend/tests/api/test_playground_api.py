@@ -90,7 +90,7 @@ def test_evaluate_stores_run_history(make_client) -> None:
     assert (
         runs[1]["decision"]["verdict"] == "escalate" and runs[0]["decision"]["verdict"] == "allow"
     )
-    assert runs[0]["scope"] == {"kind": "draft", "rule_ids": []}
+    assert runs[0]["scope"] == {"kind": "draft", "rule_ids": [], "inline_rules": []}
 
 
 def test_evaluate_malformed_request_422(make_client) -> None:

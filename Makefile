@@ -5,7 +5,7 @@ RUN_WEB  = $(COMPOSE) --profile test run --rm --no-deps --build web-test
 ARGS ?=
 
 .PHONY: up dev down logs build ps test test-backend test-frontend test-live pytest lint typecheck \
-        fmt gen-types e2e e2e-live e2e-record eval-translator translator-roundtrip sh-api sh-web
+        fmt gen-types e2e e2e-live e2e-live-llm e2e-record eval-translator translator-roundtrip sh-api sh-web
 
 up:            ## Start the stack in the background
 	$(COMPOSE) up -d --build --wait
@@ -62,6 +62,10 @@ e2e:           ## Playwright against an isolated stack (fresh DB, Jev replay); A
 
 e2e-live:      ## e2e with real Jev calls (uses TYPESAFE_API_KEY from .env; costs a little)
 	E2E_JEV_MODE=live E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" $(MAKE) e2e
+
+e2e-live-llm:  ## e2e with real Jev AND real Claude translations (costs more; ~$0.08 per translation)
+	E2E_JEV_MODE=live E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" \
+	  E2E_LLM_MODE=live E2E_LLM_KEY="$$(grep '^ANTHROPIC_API_KEY=' .env | cut -d= -f2-)" $(MAKE) e2e
 
 e2e-record:    ## e2e with real Jev calls, saving fixtures under backend/tests/fixtures/jev
 	E2E_JEV_MODE=record E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" $(MAKE) e2e

@@ -1,6 +1,12 @@
 """Translate business cases into draft rules (the MVP core)."""
 
+import asyncio
+import json
+from collections.abc import AsyncIterator
+
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from precheck.api.deps import LLMDep, SessionFactoryDep
@@ -8,17 +14,21 @@ from precheck.api.problems import PROBLEM_RESPONSES
 from precheck.authoring.errors import ServiceError
 from precheck.authoring.translation import (
     ClarificationAnswers,
+    SaveResult,
+    SaveTranslation,
     TranslateResponse,
     create_case,
     existing_rules,
     get_case,
     load_case_input,
+    save_translation,
     update_case,
 )
 from precheck.db.engine import session_scope
+from precheck.schema import RuleSpec
 from precheck.translator.lints import ExistingRule
 from precheck.translator.llm import LLMError
-from precheck.translator.pipeline import TranslateInput, Translator
+from precheck.translator.pipeline import RefineResult, TranslateInput, Translator
 
 router = APIRouter(prefix="/api/translate", tags=["translate"], responses=PROBLEM_RESPONSES)
 
@@ -81,3 +91,72 @@ async def answer_clarifications(
 def get_translation(case_id: str, db: SessionFactoryDep) -> TranslateResponse:
     with session_scope(db) as s:
         return get_case(s, case_id)
+
+
+@router.post(
+    "/stream",
+    response_class=StreamingResponse,
+    responses={200: {"content": {"application/x-ndjson": {}}, "description": "NDJSON events"}},
+)
+async def translate_stream(
+    inp: TranslateInput, db: SessionFactoryDep, llm: LLMDep
+) -> StreamingResponse:
+    """Same as POST /api/translate, streamed as NDJSON lines:
+    {"type":"progress","stage":"plan|rules|validating|repairing|tests"} ...
+    then {"type":"result","data":TranslateResponse}
+    or {"type":"error","status":...,"detail":...}."""
+    existing = await run_in_threadpool(_existing, db)
+    queue: asyncio.Queue[dict[str, object] | None] = asyncio.Queue()
+
+    async def progress(stage: str) -> None:
+        await queue.put({"type": "progress", "stage": stage})
+
+    async def run() -> None:
+        try:
+            result = await Translator(llm, existing=existing, progress=progress).translate(inp)
+
+            def store() -> str:
+                with session_scope(db) as s:
+                    return create_case(s, inp, result, created_by="user")
+
+            case_id = await run_in_threadpool(store)
+            payload = TranslateResponse(business_case_id=case_id, result=result)
+            await queue.put(
+                {"type": "result", "data": payload.model_dump(mode="json", by_alias=True)}
+            )
+        except LLMError as e:
+            await queue.put({"type": "error", "status": 503, "detail": str(e)})
+        finally:
+            await queue.put(None)
+
+    async def lines() -> AsyncIterator[str]:
+        task = asyncio.create_task(run())
+        try:
+            while (event := await queue.get()) is not None:
+                yield json.dumps(event) + "\n"
+        finally:
+            await task
+
+    return StreamingResponse(lines(), media_type="application/x-ndjson")
+
+
+@router.post("/{case_id}/save", response_model=SaveResult, status_code=201)
+def save(case_id: str, data: SaveTranslation, db: SessionFactoryDep) -> SaveResult:
+    """Save the (possibly edited) translated rules as drafts, plus their generated tests."""
+    with session_scope(db) as s:
+        return save_translation(s, case_id, data)
+
+
+class RefineRequest(BaseModel):
+    rule: RuleSpec
+    instruction: str = Field(min_length=1, max_length=2000)
+
+
+@router.post("/refine", response_model=RefineResult)
+async def refine(req: RefineRequest, db: SessionFactoryDep, llm: LLMDep) -> RefineResult:
+    """Ask the translator to change one rule ("make this stricter for amounts under $50")."""
+    existing = await run_in_threadpool(_existing, db)
+    try:
+        return await Translator(llm, existing=existing).refine(req.rule, req.instruction)
+    except LLMError as e:
+        raise TranslatorUnavailable(str(e)) from e

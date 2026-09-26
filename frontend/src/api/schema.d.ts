@@ -247,6 +247,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/translate/refine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refine
+         * @description Ask the translator to change one rule ("make this stricter for amounts under $50").
+         */
+        post: operations["refine_api_translate_refine_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/translate/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Translate Stream
+         * @description Same as POST /api/translate, streamed as NDJSON lines:
+         *     {"type":"progress","stage":"plan|rules|validating|repairing|tests"} ...
+         *     then {"type":"result","data":TranslateResponse}
+         *     or {"type":"error","status":...,"detail":...}.
+         */
+        post: operations["translate_stream_api_translate_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/translate/{case_id}": {
         parameters: {
             query?: never;
@@ -278,6 +321,26 @@ export interface paths {
          * @description Re-run the translation with the author's answers to the clarification questions.
          */
         post: operations["answer_clarifications_api_translate__case_id__answers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/translate/{case_id}/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save
+         * @description Save the (possibly edited) translated rules as drafts, plus their generated tests.
+         */
+        post: operations["save_api_translate__case_id__save_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -580,14 +643,20 @@ export interface components {
          * @description draft: every non-archived rule at its latest version (previews unpublished edits).
          *     live: live rules at their published version (what enforcement runs).
          *     rules: the listed rules at their latest version.
+         *     inline: rules passed in the request (not stored), e.g. to try a translation before saving.
          */
         EvaluateScope: {
+            /**
+             * Inline Rules
+             * @description kind=inline: unsaved rules (e.g. fresh translations)
+             */
+            inline_rules?: components["schemas"]["RuleSpec"][];
             /**
              * Kind
              * @default draft
              * @enum {string}
              */
-            kind: "draft" | "live" | "rules";
+            kind: "draft" | "live" | "rules" | "inline";
             /** Rule Ids */
             rule_ids?: string[];
         };
@@ -841,6 +910,30 @@ export interface components {
              */
             value: number;
             verdict: components["schemas"]["Verdict"];
+        };
+        /** RefineRequest */
+        RefineRequest: {
+            /** Instruction */
+            instruction: string;
+            rule: components["schemas"]["RuleSpec"];
+        };
+        /** RefineResult */
+        RefineResult: {
+            /**
+             * Cost Usd
+             * @default 0
+             */
+            cost_usd: number;
+            /** Errors */
+            errors?: string[];
+            provenance: components["schemas"]["precheck__translator__pipeline__Provenance"];
+            /**
+             * Repair Rounds
+             * @default 0
+             */
+            repair_rounds: number;
+            rule?: components["schemas"]["TranslatedRule"] | null;
+            usage?: components["schemas"]["LLMUsage"];
         };
         /** RegexPredicate */
         RegexPredicate: {
@@ -1208,6 +1301,36 @@ export interface components {
             translator_model?: string | null;
             /** Version */
             version: number;
+        };
+        /** SaveResult */
+        SaveResult: {
+            /** Rules */
+            rules: components["schemas"]["SavedRule"][];
+            /** Tests Created */
+            tests_created: number;
+        };
+        /** SaveTest */
+        SaveTest: {
+            /** Rule Id */
+            rule_id: string;
+            test: components["schemas"]["TestCaseSpec"];
+        };
+        /** SaveTranslation */
+        SaveTranslation: {
+            /**
+             * Rules
+             * @description The (possibly edited) rules to save
+             */
+            rules: components["schemas"]["RuleSpec"][];
+            /** Tests */
+            tests?: components["schemas"]["SaveTest"][];
+        };
+        /** SavedRule */
+        SavedRule: {
+            /** Id */
+            id: string;
+            /** Requested Id */
+            requested_id: string;
         };
         /** ScoreAnswer */
         ScoreAnswer: {
@@ -2257,6 +2380,108 @@ export interface operations {
             };
         };
     };
+    refine_api_translate_refine_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefineRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefineResult"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    translate_stream_api_translate_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TranslateInput"];
+            };
+        };
+        responses: {
+            /** @description NDJSON events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/x-ndjson": unknown;
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_translation_api_translate__case_id__get: {
         parameters: {
             query?: never;
@@ -2328,6 +2553,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TranslateResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    save_api_translate__case_id__save_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTranslation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveResult"];
                 };
             };
             /** @description Not found */

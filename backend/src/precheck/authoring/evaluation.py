@@ -11,23 +11,29 @@ from sqlalchemy.orm import Session
 from precheck.authoring.errors import NotFoundError
 from precheck.db.models import PlaygroundRunRow, RuleRow, RuleVersionRow
 from precheck.engine import EngineRule
-from precheck.schema import CheckRequest, Decision, Gate, RuleBody, RuleStatus
+from precheck.schema import CheckRequest, Decision, Gate, RuleBody, RuleSpec, RuleStatus
 
 
 class EvaluateScope(BaseModel):
     """draft: every non-archived rule at its latest version (previews unpublished edits).
     live: live rules at their published version (what enforcement runs).
-    rules: the listed rules at their latest version."""
+    rules: the listed rules at their latest version.
+    inline: rules passed in the request (not stored), e.g. to try a translation before saving."""
 
     model_config = ConfigDict(extra="forbid")
 
-    kind: Literal["draft", "live", "rules"] = "draft"
+    kind: Literal["draft", "live", "rules", "inline"] = "draft"
     rule_ids: list[str] = Field(default_factory=list)
+    inline_rules: list[RuleSpec] = Field(
+        default_factory=list, description="kind=inline: unsaved rules (e.g. fresh translations)"
+    )
 
     @model_validator(mode="after")
-    def _ids_for_rules(self) -> "EvaluateScope":
+    def _scope_inputs(self) -> "EvaluateScope":
         if self.kind == "rules" and not self.rule_ids:
             raise ValueError("scope kind 'rules' needs rule_ids")
+        if self.kind == "inline" and not self.inline_rules:
+            raise ValueError("scope kind 'inline' needs inline_rules")
         return self
 
 
@@ -40,6 +46,17 @@ class RuleInfo(BaseModel):
 
 
 def load_scope(session: Session, scope: EvaluateScope) -> tuple[list[EngineRule], list[RuleInfo]]:
+    if scope.kind == "inline":
+        return (
+            [
+                EngineRule(id=r.id, gate=r.gate, body=r.body, version=0, name=r.name)
+                for r in scope.inline_rules
+            ],
+            [
+                RuleInfo(id=r.id, name=r.name, status="draft", version=0, body=r.body)
+                for r in scope.inline_rules
+            ],
+        )
     stmt = select(RuleRow).order_by(RuleRow.created_at, RuleRow.id)
     if scope.kind == "live":
         stmt = stmt.where(RuleRow.status == "live")

@@ -7,6 +7,7 @@ import { PlaygroundPage } from '@/pages/PlaygroundPage'
 import { NewRulePage } from '@/pages/rules/NewRulePage'
 import { RuleDetailPage } from '@/pages/rules/RuleDetailPage'
 import { RulesPage } from '@/pages/rules/RulesPage'
+import { TranslatePage } from '@/pages/translate/TranslatePage'
 
 export const routes: RouteObject[] = [
   {
@@ -16,6 +17,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <Navigate to="/rules" replace /> },
       { path: 'rules', element: <RulesPage /> },
       { path: 'rules/new', element: <NewRulePage /> },
+      { path: 'rules/translate', element: <TranslatePage /> },
       { path: 'rules/:ruleId', element: <RuleDetailPage /> },
       { path: 'playground', element: <PlaygroundPage /> },
       { path: 'tests', element: <Placeholder title="Tests" /> },

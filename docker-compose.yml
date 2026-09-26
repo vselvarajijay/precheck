@@ -92,7 +92,9 @@ services:
       # replay by default; `make e2e-live` / `make e2e-record` switch mode and pass the key.
       JEV_MODE: ${E2E_JEV_MODE:-replay}
       TYPESAFE_API_KEY: ${E2E_JEV_KEY:-}
-      ANTHROPIC_API_KEY: ""
+      # Translator LLM: replay recorded Claude responses unless `make e2e-live-llm`.
+      LLM_MODE: ${E2E_LLM_MODE:-replay}
+      ANTHROPIC_API_KEY: ${E2E_LLM_KEY:-}
     tmpfs:
       - /tmp/e2e:uid=1000,gid=1000
     command: ["uvicorn", "precheck.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
