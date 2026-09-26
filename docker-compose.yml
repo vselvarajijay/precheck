@@ -2,6 +2,8 @@
 # Services bind 0.0.0.0 inside their containers. Other services are added by later slices:
 # authoring-mcp (11), tools (12), proxy (13), agent (14).
 
+name: precheck
+
 x-backend: &backend
   build:
     context: .
