@@ -5,9 +5,25 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from precheck.authoring.errors import ConflictError, NotFoundError
-from precheck.db.models import EscalationRow, LabDecisionRow, PolicyVersionRow, RuleRow, utcnow
+from precheck.db.models import (
+    EscalationRow,
+    LabDecisionRow,
+    LabRunRow,
+    LabRunStepRow,
+    PolicyVersionRow,
+    RuleRow,
+    utcnow,
+)
 from precheck.schema import CheckRequest, Decision, Gate, RuleBody
-from precheck.schema.lab import DecisionEvent, Escalation, EscalationCreate, LivePolicy, PolicyRule
+from precheck.schema.lab import (
+    DecisionEvent,
+    Escalation,
+    EscalationCreate,
+    LabRun,
+    LivePolicy,
+    PolicyRule,
+    RunStep,
+)
 
 
 def live_policy(session: Session) -> LivePolicy:
@@ -154,3 +170,76 @@ def resolve_escalation(session: Session, escalation_id: str, status: str) -> Esc
     row.resolved_at = utcnow()
     session.flush()
     return _escalation_out(row)
+
+
+# --- test-agent runs ------------------------------------------------------------------
+
+
+def upsert_run(session: Session, run: LabRun) -> None:
+    row = session.get(LabRunRow, run.id) or LabRunRow(id=run.id)
+    row.mode, row.scenario_id, row.goal, row.agent_id = (
+        run.mode,
+        run.scenario_id,
+        run.goal,
+        run.agent_id,
+    )
+    row.status, row.final_text, row.error = run.status, run.final_text, run.error
+    row.transcript_json = run.transcript or None
+    if run.started_at:
+        row.started_at = run.started_at
+    row.finished_at = run.finished_at
+    session.add(row)
+    session.flush()
+    for step in run.steps:
+        upsert_step(session, run.id, step)
+
+
+def upsert_step(session: Session, run_id: str, step: RunStep) -> None:
+    if session.get(LabRunRow, run_id) is None:
+        raise NotFoundError(f"run {run_id!r} not found")
+    row = session.scalar(
+        select(LabRunStepRow).where(LabRunStepRow.run_id == run_id, LabRunStepRow.idx == step.index)
+    )
+    data = step.model_dump(mode="json", by_alias=True)
+    if row is None:
+        session.add(LabRunStepRow(run_id=run_id, idx=step.index, step_json=data))
+    else:
+        row.step_json = data
+    session.flush()
+
+
+def _run_out(session: Session, row: LabRunRow, with_steps: bool) -> LabRun:
+    steps = []
+    if with_steps:
+        rows = session.scalars(
+            select(LabRunStepRow).where(LabRunStepRow.run_id == row.id).order_by(LabRunStepRow.idx)
+        )
+        steps = [RunStep.model_validate(r.step_json) for r in rows]
+    return LabRun(
+        id=row.id,
+        mode=row.mode,
+        scenario_id=row.scenario_id,
+        goal=row.goal,
+        agent_id=row.agent_id,
+        status=row.status,
+        steps=steps,
+        transcript=row.transcript_json or [],
+        final_text=row.final_text,
+        error=row.error,
+        started_at=row.started_at,
+        finished_at=row.finished_at,
+    )
+
+
+def get_run(session: Session, run_id: str) -> LabRun:
+    row = session.get(LabRunRow, run_id)
+    if row is None:
+        raise NotFoundError(f"run {run_id!r} not found")
+    return _run_out(session, row, with_steps=True)
+
+
+def list_runs(session: Session, scenario_id: str | None = None, limit: int = 50) -> list[LabRun]:
+    stmt = select(LabRunRow).order_by(LabRunRow.started_at.desc()).limit(limit)
+    if scenario_id:
+        stmt = stmt.where(LabRunRow.scenario_id == scenario_id)
+    return [_run_out(session, r, with_steps=False) for r in session.scalars(stmt)]

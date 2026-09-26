@@ -231,6 +231,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lab/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Runs
+         * @description Recent runs without steps (fetch one run for its steps).
+         */
+        get: operations["get_runs_api_lab_runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lab Run */
+        get: operations["get_lab_run_api_lab_runs__run_id__get"];
+        /**
+         * Put Run
+         * @description Create or update a test-agent run (and any steps it carries).
+         */
+        put: operations["put_run_api_lab_runs__run_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/runs/{run_id}/steps/{index}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Step */
+        put: operations["put_step_api_lab_runs__run_id__steps__index__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/playground/runs": {
         parameters: {
             query?: never;
@@ -1246,6 +1304,44 @@ export interface components {
              */
             output_tokens: number;
         };
+        /** LabRun */
+        LabRun: {
+            /** Agent Id */
+            agent_id: string;
+            /** Error */
+            error?: string | null;
+            /** Final Text */
+            final_text?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
+            /** Goal */
+            goal?: string | null;
+            /** Id */
+            id: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "scripted" | "llm";
+            /** Scenario Id */
+            scenario_id?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "passed" | "failed" | "completed" | "error";
+            /** Steps */
+            steps?: components["schemas"]["RunStep"][];
+            /**
+             * Transcript
+             * @description LLM mode messages
+             */
+            transcript?: {
+                [key: string]: unknown;
+            }[];
+        };
         /**
          * LivePolicy
          * @description What enforcement runs: live rules at their published versions.
@@ -1883,6 +1979,49 @@ export interface components {
             translator_model?: string | null;
             /** Version */
             version: number;
+        };
+        /**
+         * RunStep
+         * @description One tool call the test agent made through the proxy, and what happened.
+         */
+        RunStep: {
+            /** Args */
+            args?: {
+                [key: string]: unknown;
+            };
+            /** Decisions */
+            decisions?: components["schemas"]["DecisionEvent"][];
+            /** Expect Reached Tool */
+            expect_reached_tool?: boolean | null;
+            expected_result_verdict?: components["schemas"]["Verdict"] | null;
+            expected_verdict?: components["schemas"]["Verdict"] | null;
+            /** Index */
+            index: number;
+            /**
+             * Latency Ms
+             * @default 0
+             */
+            latency_ms: number;
+            /**
+             * Message
+             * @description What the agent got back (truncated)
+             * @default
+             */
+            message: string;
+            /** Mismatches */
+            mismatches?: string[];
+            /** Passed */
+            passed?: boolean | null;
+            /** Reached Tool */
+            reached_tool?: boolean | null;
+            /** Reason */
+            reason?: string | null;
+            /** @description Verdict on the result (ingress) */
+            result_verdict?: components["schemas"]["Verdict"] | null;
+            /** Tool */
+            tool: string;
+            /** @description Verdict on the call (tool_call gate) */
+            verdict?: components["schemas"]["Verdict"] | null;
         };
         /** SaveResult */
         SaveResult: {
@@ -2972,6 +3111,208 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LivePolicy"];
                 };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_runs_api_lab_runs_get: {
+        parameters: {
+            query?: {
+                scenario_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabRun"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_lab_run_api_lab_runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabRun"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_run_api_lab_runs__run_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabRun"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_step_api_lab_runs__run_id__steps__index__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                index: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunStep"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not found */
             404: {

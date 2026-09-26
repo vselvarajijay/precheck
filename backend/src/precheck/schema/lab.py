@@ -66,3 +66,49 @@ class Escalation(EscalationCreate):
     created_at: datetime | None = None
     resolved_at: datetime | None = None
     extra: dict[str, Any] = Field(default_factory=dict)
+
+
+# --- lab runs (test agent) --------------------------------------------------------------
+
+RunMode = Literal["scripted", "llm"]
+RunStatus = Literal["running", "passed", "failed", "completed", "error"]
+
+
+class RunStep(BaseModel):
+    """One tool call the test agent made through the proxy, and what happened."""
+
+    index: int
+    tool: str
+    args: dict[str, Any] = Field(default_factory=dict)
+    reason: str | None = None
+    verdict: Verdict | None = Field(
+        default=None, description="Verdict on the call (tool_call gate)"
+    )
+    result_verdict: Verdict | None = Field(
+        default=None, description="Verdict on the result (ingress)"
+    )
+    reached_tool: bool | None = None
+    message: str = Field(default="", description="What the agent got back (truncated)")
+    decisions: list[DecisionEvent] = Field(default_factory=list)
+    latency_ms: float = 0.0
+    # scripted runs only
+    expected_verdict: Verdict | None = None
+    expected_result_verdict: Verdict | None = None
+    expect_reached_tool: bool | None = None
+    passed: bool | None = None
+    mismatches: list[str] = Field(default_factory=list)
+
+
+class LabRun(BaseModel):
+    id: str
+    mode: RunMode
+    scenario_id: str | None = None
+    goal: str | None = None
+    agent_id: str
+    status: RunStatus
+    steps: list[RunStep] = Field(default_factory=list)
+    transcript: list[dict[str, Any]] = Field(default_factory=list, description="LLM mode messages")
+    final_text: str | None = None
+    error: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None

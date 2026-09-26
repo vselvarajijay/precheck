@@ -9,15 +9,26 @@ from precheck.api.deps import SessionFactoryDep
 from precheck.api.problems import PROBLEM_RESPONSES
 from precheck.authoring.lab import (
     create_escalation,
+    get_run,
     list_decisions,
     list_escalations,
+    list_runs,
     live_policy,
     record_decision,
     resolve_escalation,
+    upsert_run,
+    upsert_step,
 )
 from precheck.db.engine import session_scope
 from precheck.db.models import LabDecisionRow
-from precheck.schema.lab import DecisionEvent, Escalation, EscalationCreate, LivePolicy
+from precheck.schema.lab import (
+    DecisionEvent,
+    Escalation,
+    EscalationCreate,
+    LabRun,
+    LivePolicy,
+    RunStep,
+)
 
 router = APIRouter(prefix="/api/lab", tags=["lab"], responses=PROBLEM_RESPONSES)
 
@@ -69,3 +80,31 @@ def act_on_escalation(
     target = {"approve": "approved", "deny": "denied", "consume": "consumed"}[action]
     with session_scope(db) as s:
         return resolve_escalation(s, escalation_id, target)
+
+
+@router.put("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT)
+def put_run(run_id: str, run: LabRun, db: SessionFactoryDep) -> None:
+    """Create or update a test-agent run (and any steps it carries)."""
+    with session_scope(db) as s:
+        upsert_run(s, run.model_copy(update={"id": run_id}))
+
+
+@router.put("/runs/{run_id}/steps/{index}", status_code=status.HTTP_204_NO_CONTENT)
+def put_step(run_id: str, index: int, step: RunStep, db: SessionFactoryDep) -> None:
+    with session_scope(db) as s:
+        upsert_step(s, run_id, step.model_copy(update={"index": index}))
+
+
+@router.get("/runs", response_model=list[LabRun])
+def get_runs(
+    db: SessionFactoryDep, scenario_id: str | None = None, limit: int = 50
+) -> list[LabRun]:
+    """Recent runs without steps (fetch one run for its steps)."""
+    with session_scope(db) as s:
+        return list_runs(s, scenario_id, min(max(limit, 1), 200))
+
+
+@router.get("/runs/{run_id}", response_model=LabRun)
+def get_lab_run(run_id: str, db: SessionFactoryDep) -> LabRun:
+    with session_scope(db) as s:
+        return get_run(s, run_id)

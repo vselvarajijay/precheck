@@ -185,3 +185,31 @@ class EscalationRow(Base):
     decision_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(default=utcnow, index=True)
     resolved_at: Mapped[datetime | None] = mapped_column()
+
+
+class LabRunRow(Base):
+    """A test-agent run (scripted scenario or LLM goal); steps live in lab_run_steps."""
+
+    __tablename__ = "lab_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    mode: Mapped[str] = mapped_column(String(16))
+    scenario_id: Mapped[str | None] = mapped_column(String(128), index=True)
+    goal: Mapped[str | None] = mapped_column(Text)
+    agent_id: Mapped[str] = mapped_column(String(128))
+    status: Mapped[str] = mapped_column(String(16))
+    transcript_json: Mapped[list[Any] | None] = mapped_column(JSON)
+    final_text: Mapped[str | None] = mapped_column(Text)
+    error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(default=utcnow, index=True)
+    finished_at: Mapped[datetime | None] = mapped_column()
+
+
+class LabRunStepRow(Base):
+    __tablename__ = "lab_run_steps"
+    __table_args__ = (UniqueConstraint("run_id", "idx", name="uq_lab_run_steps_run_idx"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("lab_runs.id"), index=True)
+    idx: Mapped[int] = mapped_column(Integer)
+    step_json: Mapped[dict[str, Any]] = mapped_column(JSON)
