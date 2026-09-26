@@ -15,6 +15,7 @@ from precheck.authoring.dto import (
     RuleUpdate,
     RuleUpdateResult,
 )
+from precheck.authoring.policy import snapshot_policy
 from precheck.authoring.rules import RuleService
 from precheck.db.engine import session_scope
 from precheck.schema import Gate, RuleVersion
@@ -62,11 +63,21 @@ def get_rule_version(rule_id: str, version: int, db: SessionFactoryDep) -> RuleV
 def set_rule_status(rule_id: str, data: RuleStatusChange, db: SessionFactoryDep) -> RuleDetail:
     """`live` validates and pins the current version (a Jev version must be pinned)."""
     with session_scope(db) as s:
-        return RuleService(s).set_status(rule_id, data.status)
+        svc = RuleService(s)
+        was_live = svc.get(rule_id).status == "live"
+        rule = svc.set_status(rule_id, data.status)
+        if was_live or rule.status == "live":
+            snapshot_policy(s, note=f"{rule_id} -> {rule.status} (v{rule.current_version})")
+        return rule
 
 
 @router.delete("/{rule_id}", response_model=RuleDetail)
 def archive_rule(rule_id: str, db: SessionFactoryDep) -> RuleDetail:
     """Soft delete: sets status to archived."""
     with session_scope(db) as s:
-        return RuleService(s).archive(rule_id)
+        svc = RuleService(s)
+        was_live = svc.get(rule_id).status == "live"
+        rule = svc.archive(rule_id)
+        if was_live:
+            snapshot_policy(s, note=f"{rule_id} archived")
+        return rule

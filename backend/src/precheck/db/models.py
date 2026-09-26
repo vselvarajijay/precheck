@@ -137,3 +137,16 @@ class SettingRow(Base):
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value_json: Mapped[Any] = mapped_column(JSON)
     updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
+class PolicyVersionRow(Base):
+    """An immutable snapshot of the live policy: which rule versions were live."""
+
+    __tablename__ = "policy_versions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    version: Mapped[int] = mapped_column(Integer, unique=True)
+    rules_json: Mapped[list[Any]] = mapped_column(JSON)  # [{rule_id, version, content_hash}]
+    content_hash: Mapped[str] = mapped_column(String(80))
+    note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)

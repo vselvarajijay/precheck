@@ -1,0 +1,25 @@
+{
+  "request": {
+    "model": "jev-latest",
+    "questions": {
+      "ok": {
+        "instructions": "Is this a greeting?",
+        "type": "noul"
+      }
+    },
+    "state": "hello"
+  },
+  "response": {
+    "answers": {
+      "ok": {
+        "noul": 0.99,
+        "type": "noul"
+      }
+    },
+    "model": "jev-1.13.0",
+    "usage": {
+      "input_tokens": 272,
+      "output_tokens": 20
+    }
+  }
+}

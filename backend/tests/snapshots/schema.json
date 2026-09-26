@@ -2714,6 +2714,17 @@
             "title": "Name",
             "type": "string"
           },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SpecProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "source_text": {
             "anyOf": [
               {
@@ -2732,6 +2743,19 @@
             },
             "title": "Tests",
             "type": "array"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exported live version (ignored on import)",
+            "title": "Version"
           }
         },
         "required": [
@@ -2858,6 +2882,62 @@
         ],
         "title": "Severity",
         "type": "string"
+      },
+      "SpecProvenance": {
+        "additionalProperties": false,
+        "description": "Where an exported rule version came from (informational; ignored on import).",
+        "properties": {
+          "content_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Content Hash"
+          },
+          "jev_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Jev Model"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Prompt Version"
+          },
+          "translator_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Translator Model"
+          }
+        },
+        "title": "SpecProvenance",
+        "type": "object"
       },
       "TestCaseSpec": {
         "additionalProperties": false,
