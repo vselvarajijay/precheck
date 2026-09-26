@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from precheck.api.app import create_app
 from precheck.config import Settings, get_settings
+from precheck.jev import FixtureStore, JevClient
 
 BACKEND = Path(__file__).resolve().parents[1]
 
@@ -52,8 +53,12 @@ def make_client(db_path: Path) -> Iterator[object]:
     """Build a TestClient with an overridden Settings (never reads the real .env)."""
     clients: list[TestClient] = []
 
-    def _make(**overrides: object) -> TestClient:
+    def _make(jev: object | None = None, **overrides: object) -> TestClient:
+        """`jev` defaults to a replay client over the committed fixtures (no network)."""
         app = create_app()
+        app.state.jev = jev or JevClient(
+            None, mode="replay", fixtures=FixtureStore(BACKEND / "tests" / "fixtures" / "jev")
+        )
         overrides.setdefault("db_path", db_path)
         settings = Settings(_env_file=None, **overrides)  # type: ignore[arg-type]
         app.dependency_overrides[get_settings] = lambda: settings

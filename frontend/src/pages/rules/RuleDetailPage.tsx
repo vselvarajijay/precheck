@@ -7,6 +7,7 @@ import { useRule, useRuleVersion, useSetRuleStatus, useUpdateRule } from '@/api/
 import type { RuleBody, RuleDetail, RuleStatus } from '@/api/types'
 import { CheckBadges, GateBadge, StatusBadge } from '@/components/rules/badges'
 import { RuleBodyEditor, type ValidationState } from '@/components/rules/RuleBodyEditor'
+import { RuleTestsTab } from '@/components/rules/RuleTestsTab'
 import { VersionDiff } from '@/components/rules/VersionDiff'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -61,7 +62,7 @@ export function RuleDetailPage() {
           <Versions rule={rule} />
         </TabsContent>
         <TabsContent value="tests" className="pt-2">
-          <p className="text-sm text-muted-foreground">Test cases and runs arrive with the Tests slice.</p>
+          <RuleTestsTab ruleId={rule.id} />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,5 +1,5 @@
 import { json } from '@codemirror/lang-json'
-import CodeMirror from '@uiw/react-codemirror'
+import CodeMirror, { EditorView } from '@uiw/react-codemirror'
 import { useEffect, useRef, useState } from 'react'
 import { validateRuleBody } from '@/api/rules'
 import type { RuleBody } from '@/api/types'
@@ -8,6 +8,8 @@ interface Props {
   value: RuleBody
   onApply: (body: RuleBody) => void
 }
+
+const EXTENSIONS = [json(), EditorView.contentAttributes.of({ 'aria-label': 'Rule body JSON' })]
 
 type Status = { kind: 'synced' } | { kind: 'checking' } | { kind: 'error'; messages: string[] }
 
@@ -62,7 +64,7 @@ export function JsonBodyEditor({ value, onApply }: Props) {
   return (
     <div className="space-y-2">
       <div className="overflow-hidden rounded-md border text-xs" data-testid="json-editor">
-        <CodeMirror value={text} height="420px" extensions={[json()]} onChange={setText} aria-label="Rule body JSON" />
+        <CodeMirror value={text} height="420px" extensions={EXTENSIONS} onChange={setText} />
       </div>
       <div className="text-xs" role="status" data-testid="json-status">
         {status.kind === 'synced' && <span className="text-emerald-700">In sync with the form.</span>}
