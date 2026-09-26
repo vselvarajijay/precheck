@@ -21,10 +21,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/validate/check-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Check Request
+         * @description 422 if invalid; otherwise the normalized request.
+         */
+        post: operations["validate_check_request_api_validate_check_request_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/validate/rule-body": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Rule Body
+         * @description 422 if the body is invalid; otherwise its hash and anything blocking publication.
+         */
+        post: operations["validate_rule_body_api_validate_rule_body_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AgentInfo
+         * @description Who is acting.
+         */
+        AgentInfo: {
+            /** Id */
+            id?: string | null;
+            /**
+             * Purpose
+             * @description Summary of the agent's system prompt
+             */
+            purpose?: string | null;
+        };
+        /** AllPredicate */
+        AllPredicate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "all";
+            /** Predicates */
+            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"])[];
+        };
+        /** AnyPredicate */
+        AnyPredicate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "any";
+            /** Predicates */
+            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"])[];
+        };
+        /**
+         * Bands
+         * @description Thresholds, inclusive: value >= deny_at -> deny; >= escalate_at -> escalate; else allow.
+         *
+         *     escalate_at == deny_at disables the escalate band.
+         */
+        Bands: {
+            /** Deny At */
+            deny_at: number;
+            /** Escalate At */
+            escalate_at: number;
+        };
+        /**
+         * CheckRequest
+         * @description Only `gate` and `request` are required; rules declare what else they need.
+         */
+        CheckRequest: {
+            agent?: components["schemas"]["AgentInfo"] | null;
+            context?: components["schemas"]["Context"] | null;
+            gate: components["schemas"]["Gate"];
+            /** History */
+            history?: components["schemas"]["HistoryItem"][] | null;
+            /**
+             * Reason
+             * @description The agent's stated justification
+             */
+            reason?: string | null;
+            request: components["schemas"]["RequestedAction"];
+        };
+        /**
+         * ChoiceOutcome
+         * @description Each option maps to a verdict; confidence below `min_confidence` escalates.
+         */
+        ChoiceOutcome: {
+            /** Map */
+            map: {
+                [key: string]: components["schemas"]["Verdict"];
+            };
+            /**
+             * Min Confidence
+             * @default 0
+             */
+            min_confidence: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "choice";
+        };
+        /** ChoiceQuestion */
+        ChoiceQuestion: {
+            /**
+             * Criteria
+             * @description option -> description
+             */
+            criteria: {
+                [key: string]: string;
+            };
+            /** Instructions */
+            instructions: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "choice";
+        };
+        /** ComparePredicate */
+        ComparePredicate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "eq" | "gt" | "gte" | "lt" | "lte" | "ne";
+            /** Path */
+            path: string;
+            /** Value */
+            value: string | number | boolean | null;
+        };
+        /**
+         * Context
+         * @description Why the agent is acting, if the host provides it.
+         */
+        Context: {
+            /** Recent Messages */
+            recent_messages?: string[] | null;
+            /** User Goal */
+            user_goal?: string | null;
+        };
+        /**
+         * DeterministicCheck
+         * @description When `predicate` is true the rule's verdict is `verdict_when_true` and its Jev check
+         *     is skipped; a deny short-circuits the whole decision. When false, the Jev check (if any)
+         *     decides, otherwise the rule allows.
+         */
+        DeterministicCheck: {
+            /** Predicate */
+            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"];
+            verdict_when_true: components["schemas"]["Verdict"];
+        };
+        /** DomainPredicate */
+        DomainPredicate: {
+            /** Domains */
+            domains: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "domain_in" | "domain_not_in";
+            /** Path */
+            path: string;
+        };
+        /** ExistsPredicate */
+        ExistsPredicate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "exists" | "missing";
+            /** Path */
+            path: string;
+        };
+        /**
+         * Gate
+         * @enum {string}
+         */
+        Gate: "tool_call" | "egress" | "ingress";
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** Health */
         Health: {
             /** Jev Configured */
@@ -34,6 +238,239 @@ export interface components {
             /** Version */
             version: string;
         };
+        /**
+         * HistoryItem
+         * @description A prior tool call in this session.
+         */
+        HistoryItem: {
+            /** Args */
+            args?: {
+                [key: string]: unknown;
+            };
+            /** Result Summary */
+            result_summary?: string | null;
+            /** Tool */
+            tool: string;
+        };
+        /** JevCheck */
+        JevCheck: {
+            /**
+             * Model
+             * @description Pinned version (jev-X.Y.Z) required for live rules
+             * @default jev-latest
+             */
+            model: string;
+            /** Outcomes */
+            outcomes: {
+                [key: string]: components["schemas"]["NoulOutcome"] | components["schemas"]["ChoiceOutcome"] | components["schemas"]["ScoreOutcome"];
+            };
+            /** Questions */
+            questions: {
+                [key: string]: components["schemas"]["NoulQuestion"] | components["schemas"]["ChoiceQuestion"] | components["schemas"]["ScoreQuestion"];
+            };
+            /**
+             * State Template
+             * @description CheckRequest paths sent to Jev as state; nothing else is
+             */
+            state_template: string[];
+        };
+        /** MinLenPredicate */
+        MinLenPredicate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "min_len";
+            /** Path */
+            path: string;
+            /** Value */
+            value: number;
+        };
+        /** NotPredicate */
+        NotPredicate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "not";
+            /** Predicate */
+            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"];
+        };
+        /** NoulCriteria */
+        NoulCriteria: {
+            /** False */
+            false: string;
+            /** True */
+            true: string;
+        };
+        /**
+         * NoulOutcome
+         * @description `high_is_bad`: bands apply to P(true). `low_is_bad`: bands apply to 1 - P(true).
+         */
+        NoulOutcome: {
+            bands: components["schemas"]["Bands"];
+            /**
+             * Direction
+             * @default high_is_bad
+             * @enum {string}
+             */
+            direction: "high_is_bad" | "low_is_bad";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "noul";
+        };
+        /** NoulQuestion */
+        NoulQuestion: {
+            criteria?: components["schemas"]["NoulCriteria"] | null;
+            /** Instructions */
+            instructions: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "noul";
+        };
+        /** RegexPredicate */
+        RegexPredicate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "regex";
+            /** Path */
+            path: string;
+            /** Pattern */
+            pattern: string;
+        };
+        /**
+         * RequestedAction
+         * @description What the agent wants to do now.
+         */
+        RequestedAction: {
+            /** Args */
+            args?: {
+                [key: string]: unknown;
+            } | null;
+            /** Body */
+            body?: string | {
+                [key: string]: unknown;
+            } | unknown[] | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "tool_call" | "external_call" | "content";
+            /** Method */
+            method?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Tool */
+            tool?: string | null;
+            /** Url */
+            url?: string | null;
+        };
+        /**
+         * RuleBody
+         * @description The versioned, hashed part of a rule: everything that can change a verdict.
+         */
+        RuleBody: {
+            /**
+             * Applies When
+             * @description Cheap selector; absent = applies to every request at the gate
+             */
+            applies_when?: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"]) | null;
+            deterministic?: components["schemas"]["DeterministicCheck"] | null;
+            jev?: components["schemas"]["JevCheck"] | null;
+            /** @description Verdict when Jev fails; absent = gate/severity default */
+            on_error?: components["schemas"]["Verdict"] | null;
+            /** @default escalate */
+            on_missing: components["schemas"]["Verdict"];
+            /**
+             * Requires
+             * @description Fields that must be present, else `on_missing`
+             */
+            requires?: string[];
+            /** @default medium */
+            severity: components["schemas"]["Severity"];
+        };
+        /** RuleBodyValidation */
+        RuleBodyValidation: {
+            /** Content Hash */
+            content_hash: string;
+            /** Jev Model */
+            jev_model: string | null;
+            /** Live Problems */
+            live_problems: string[];
+        };
+        /**
+         * ScoreOutcome
+         * @description Bands on the expected score (a float in [0, levels-1]); low confidence escalates.
+         */
+        ScoreOutcome: {
+            bands: components["schemas"]["Bands"];
+            /**
+             * Min Confidence
+             * @default 0
+             */
+            min_confidence: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "score";
+        };
+        /** ScoreQuestion */
+        ScoreQuestion: {
+            /**
+             * Criteria
+             * @description level descriptions, level 0 first
+             */
+            criteria: string[];
+            /** Instructions */
+            instructions: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "score";
+        };
+        /** SetPredicate */
+        SetPredicate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "in" | "not_in";
+            /** Path */
+            path: string;
+            /** Values */
+            values: (string | number | boolean | null)[];
+        };
+        /**
+         * Severity
+         * @enum {string}
+         */
+        Severity: "low" | "medium" | "high";
+        /** ValidationError */
+        ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
+        /**
+         * Verdict
+         * @enum {string}
+         */
+        Verdict: "allow" | "deny" | "escalate";
     };
     responses: never;
     parameters: never;
@@ -59,6 +496,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    validate_check_request_api_validate_check_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckRequest"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_rule_body_api_validate_rule_body_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleBodyValidation"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
