@@ -203,3 +203,19 @@ def test_classify(text: str, expected: tuple[str, str | None]) -> None:
 
     v, rv = classify(CallToolResult(content=[TextContent(type="text", text=text)], is_error=True))
     assert (v.value, rv.value if rv else None) == expected
+
+
+async def test_retry_step_uses_approval_in_same_session(lab: Lab) -> None:
+    from precheck.labagent.runner import retry_step
+
+    api = FakeLabApi(lab)
+    run = await run_scenario(get_scenario(SCENARIOS, "large-refund"), lab.proxy, api)  # type: ignore[arg-type]
+    assert run.steps[1].verdict.value == "escalate"  # type: ignore[union-attr]
+    [esc_id] = lab.control.escalations
+    lab.control.approve(esc_id)
+    await lab.proxy.poll_approvals()
+    retried = await retry_step(run, 2, lab.proxy, api)  # type: ignore[arg-type]
+    assert retried.index == 3 and retried.verdict.value == "allow" and retried.reached_tool  # type: ignore[union-attr]
+    assert retried.passed is None  # no expectation for an ad-hoc retry
+    again = await retry_step(run, 2, lab.proxy, api)  # type: ignore[arg-type]
+    assert again.verdict.value == "escalate"  # type: ignore[union-attr]

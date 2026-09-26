@@ -278,3 +278,19 @@ async def run_llm(
     run.finished_at = utcnow()
     await api.put_run(run)
     return run
+
+
+async def retry_step(run: LabRun, index: int, proxy_target: Any, api: LabApi) -> RunStep:
+    """Repeat step `index` in the SAME session (e.g. after its escalation was approved).
+    Appended as a new step without expectations."""
+    original = next((s for s in run.steps if s.index == index), None)
+    if original is None:
+        raise ValueError(f"run {run.id} has no step {index}")
+    async with Client(proxy_target) as client:
+        step = await _call(
+            client, api, run, len(run.steps) + 1, original.tool, original.args, original.reason
+        )
+    step = step.model_copy(update={"decisions": await api.step_decisions(run.id, step.index)})
+    run.steps.append(step)
+    await api.put_step(run.id, step)
+    return step

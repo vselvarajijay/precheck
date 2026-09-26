@@ -129,6 +129,18 @@ async def test_escalation_approve_allows_retry_once(lab: Lab) -> None:
     assert notes == ["escalation approved; grant used"]
 
 
+async def test_retry_of_pending_escalation_checks_approval_immediately(lab: Lab) -> None:
+    """No waiting for the background poll: a retry of the held call asks for its status."""
+    big = {**REFUND_OK, "amount": 900}
+    async with Client(lab.proxy) as c:
+        await lab.call(c, "issue_refund", big)
+        [esc_id] = lab.control.escalations
+        lab.control.approve(esc_id)
+        retry = await lab.call(c, "issue_refund", big)  # no poll_approvals() in between
+        assert not retry.is_error
+    assert lab.control.statuses[esc_id] == "consumed"
+
+
 async def test_denied_escalation_never_grants(lab: Lab) -> None:
     big = {**REFUND_OK, "amount": 900}
     async with Client(lab.proxy) as c:

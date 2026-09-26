@@ -240,7 +240,10 @@ class ProxyServer(MCPServer):
                 )
             )
 
-        # 1. A human-approved escalation lets exactly this call through once.
+        # 1. A human-approved escalation lets exactly this call through once. A retry of a
+        #    still-pending escalation checks its status now rather than waiting for the poll.
+        if not self._grants.get(key) and key in self._pending.values():
+            await self.poll_approvals()
         if self._grants.get(key):
             esc_id = self._grants[key].pop(0)
             self.control.consume_escalation(esc_id)

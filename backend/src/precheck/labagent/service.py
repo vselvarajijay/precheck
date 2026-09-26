@@ -21,7 +21,7 @@ from pydantic import BaseModel, model_validator
 from precheck.config import get_settings
 from precheck.enforcement.agents import AgentProfiles
 from precheck.labagent.reporting import LabApi
-from precheck.labagent.runner import ClaudeAgentLLM, run_llm, run_scenario
+from precheck.labagent.runner import ClaudeAgentLLM, retry_step, run_llm, run_scenario
 from precheck.labagent.scenarios import get_scenario, load_scenarios
 from precheck.schema.lab import LabRun, RunStep
 from precheck.schema.scenario import Scenario
@@ -144,6 +144,21 @@ def create_app() -> FastAPI:
         if run_id not in runs:
             raise HTTPException(404, f"run {run_id!r} not found")
         return runs[run_id]
+
+    @app.post("/runs/{run_id}/retry/{index}", response_model=RunStep)
+    async def retry(run_id: str, index: int) -> RunStep:
+        """Repeat a step in the same session (approval grants are per session + call)."""
+        run = runs.get(run_id)
+        if run is None:
+            raise HTTPException(404, f"run {run_id!r} not found (runs live in the agent's memory)")
+        if run.status == "running":
+            raise HTTPException(409, "run is still running")
+        try:
+            step = await retry_step(run, index, settings.agent_proxy_url, api())
+        except ValueError as e:
+            raise HTTPException(404, str(e)) from e
+        await publish(run.id, "step", step.model_dump_json(by_alias=True))
+        return step
 
     @app.get("/runs/{run_id}/events")
     async def events(run_id: str) -> StreamingResponse:

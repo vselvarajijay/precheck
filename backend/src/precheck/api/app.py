@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from precheck import __version__
 from precheck.api import (
+    agentlab,
     lab,
     playground,
     policy,
@@ -71,6 +72,7 @@ def create_app() -> FastAPI:
     app.include_router(translate.router)
     app.include_router(tests.router)
     app.include_router(policy.router)
+    app.include_router(agentlab.router)
     app.include_router(lab.router)
     if get_settings().enable_test_reset:
         app.include_router(testing.router)
