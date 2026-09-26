@@ -226,6 +226,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/translate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Translate
+         * @description Business case -> draft rules + clarifications + generated tests (nothing is saved as a
+         *     rule yet; the business case and result are stored).
+         */
+        post: operations["translate_api_translate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/translate/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Translation */
+        get: operations["get_translation_api_translate__case_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/translate/{case_id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Answer Clarifications
+         * @description Re-run the translation with the author's answers to the clarification questions.
+         */
+        post: operations["answer_clarifications_api_translate__case_id__answers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/validate/check-request": {
         parameters: {
             query?: never;
@@ -384,6 +442,39 @@ export interface components {
              * @enum {string}
              */
             type: "choice";
+        };
+        /** Clarification */
+        Clarification: {
+            /**
+             * Id
+             * @description Short snake_case id
+             */
+            id: string;
+            /**
+             * Options
+             * @description 2-4 concrete answer options
+             */
+            options: string[];
+            /**
+             * Question
+             * @description A specific question the author must answer
+             */
+            question: string;
+            /**
+             * Why
+             * @description What is ambiguous and what changes depending on the answer
+             */
+            why: string;
+        };
+        /** ClarificationAnswers */
+        ClarificationAnswers: {
+            /**
+             * Answers
+             * @description Clarification id -> answer
+             */
+            answers: {
+                [key: string]: string;
+            };
         };
         /** ComparePredicate */
         ComparePredicate: {
@@ -598,6 +689,29 @@ export interface components {
              */
             output_tokens: number;
         };
+        /** LLMUsage */
+        LLMUsage: {
+            /**
+             * Cache Creation Input Tokens
+             * @default 0
+             */
+            cache_creation_input_tokens: number;
+            /**
+             * Cache Read Input Tokens
+             * @default 0
+             */
+            cache_read_input_tokens: number;
+            /**
+             * Input Tokens
+             * @default 0
+             */
+            input_tokens: number;
+            /**
+             * Output Tokens
+             * @default 0
+             */
+            output_tokens: number;
+        };
         /** MinLenPredicate */
         MinLenPredicate: {
             /**
@@ -709,13 +823,6 @@ export interface components {
              */
             type: string;
         };
-        /** Provenance */
-        Provenance: {
-            /** Prompt Version */
-            prompt_version?: string | null;
-            /** Translator Model */
-            translator_model?: string | null;
-        };
         /**
          * QuestionResult
          * @description One Jev question's answer and the verdict it mapped to.
@@ -775,6 +882,30 @@ export interface components {
             url?: string | null;
         };
         /**
+         * Requirement
+         * @description Step 1+2: one atomic requirement and how it must be checked.
+         */
+        Requirement: {
+            /**
+             * Requirement
+             * @description One atomic, testable requirement in plain words
+             */
+            requirement: string;
+            /**
+             * Routing
+             * @description deterministic: numbers, dates, counts, exact matches, allowlists; judgment: needs understanding of meaning/intent; both: code guard + Jev judgment
+             * @enum {string}
+             */
+            routing: "deterministic" | "judgment" | "both";
+            /** Routing Reason */
+            routing_reason: string;
+            /**
+             * Source Sentence
+             * @description Exact sentence(s) from the business case
+             */
+            source_sentence: string;
+        };
+        /**
          * RuleBody
          * @description The versioned, hashed part of a rule: everything that can change a verdict.
          */
@@ -827,7 +958,7 @@ export interface components {
             id?: string | null;
             /** Name */
             name: string;
-            provenance?: components["schemas"]["Provenance"] | null;
+            provenance?: components["schemas"]["precheck__authoring__dto__Provenance"] | null;
             /** Source Text */
             source_text?: string | null;
         };
@@ -924,6 +1055,24 @@ export interface components {
             source?: ("missing_fields" | "deterministic" | "jev" | "error" | "no_verdict") | null;
             verdict?: components["schemas"]["Verdict"] | null;
         };
+        /**
+         * RuleSpec
+         * @description A rule as authored in YAML/JSON (rule packs, import/export).
+         */
+        RuleSpec: {
+            body: components["schemas"]["RuleBody"];
+            /** Explanation */
+            explanation?: string | null;
+            gate: components["schemas"]["Gate"];
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Source Text */
+            source_text?: string | null;
+            /** Tests */
+            tests?: components["schemas"]["TestCaseSpec"][];
+        };
         /** RuleStatusChange */
         RuleStatusChange: {
             /**
@@ -982,7 +1131,7 @@ export interface components {
             explanation?: string | null;
             /** Name */
             name?: string | null;
-            provenance?: components["schemas"]["Provenance"] | null;
+            provenance?: components["schemas"]["precheck__authoring__dto__Provenance"] | null;
             /** Source Text */
             source_text?: string | null;
         };
@@ -1168,6 +1317,114 @@ export interface components {
              */
             rule_id?: string | null;
         };
+        /**
+         * TestCaseSpec
+         * @description A golden-set example: a check request and the verdict the rule(s) should give.
+         */
+        TestCaseSpec: {
+            check_request: components["schemas"]["CheckRequest"];
+            expected_verdict: components["schemas"]["Verdict"];
+            /** Name */
+            name: string;
+            /**
+             * Origin
+             * @default user
+             * @enum {string}
+             */
+            origin: "user" | "generated" | "playground";
+        };
+        /** TranslateInput */
+        TranslateInput: {
+            /** Agent Purpose */
+            agent_purpose?: string | null;
+            /**
+             * Answers
+             * @description Clarification id -> answer
+             */
+            answers?: {
+                [key: string]: string;
+            };
+            /**
+             * Domains
+             * @description Our own / allowlisted domains
+             */
+            domains?: string[];
+            gate_hint?: components["schemas"]["Gate"] | null;
+            /**
+             * Text
+             * @description The business case, in prose
+             */
+            text: string;
+            /**
+             * Tools
+             * @description Tool catalog the agent has
+             */
+            tools?: string[];
+        };
+        /** TranslateResponse */
+        TranslateResponse: {
+            /** Business Case Id */
+            business_case_id: string;
+            result: components["schemas"]["TranslationResult"];
+        };
+        /** TranslatedRule */
+        TranslatedRule: {
+            spec: components["schemas"]["RuleSpec"];
+            /** Warnings */
+            warnings?: components["schemas"]["TranslationWarning"][];
+        };
+        /** TranslatedTest */
+        TranslatedTest: {
+            /** Kind */
+            kind: string;
+            /** Rule Id */
+            rule_id: string;
+            test: components["schemas"]["TestCaseSpec"];
+        };
+        /** TranslationResult */
+        TranslationResult: {
+            /** Clarifications */
+            clarifications?: components["schemas"]["Clarification"][];
+            /**
+             * Cost Usd
+             * @default 0
+             */
+            cost_usd: number;
+            /**
+             * Errors
+             * @description Problems left after repair
+             */
+            errors?: string[];
+            provenance: components["schemas"]["precheck__translator__pipeline__Provenance"];
+            /**
+             * Repair Rounds
+             * @default 0
+             */
+            repair_rounds: number;
+            /** Requirements */
+            requirements?: components["schemas"]["Requirement"][];
+            /** Rules */
+            rules?: components["schemas"]["TranslatedRule"][];
+            /**
+             * Status
+             * @description translated | needs_clarification | failed
+             */
+            status: string;
+            /** Tests */
+            tests?: components["schemas"]["TranslatedTest"][];
+            usage?: components["schemas"]["LLMUsage"];
+            /** Warnings */
+            warnings?: components["schemas"]["TranslationWarning"][];
+        };
+        /** TranslationWarning */
+        TranslationWarning: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /** Rule Id */
+            rule_id: string | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -1200,6 +1457,25 @@ export interface components {
             jev_model: string | null;
             /** Version */
             version: number;
+        };
+        /** Provenance */
+        precheck__authoring__dto__Provenance: {
+            /** Prompt Version */
+            prompt_version?: string | null;
+            /** Translator Model */
+            translator_model?: string | null;
+        };
+        /** Provenance */
+        precheck__translator__pipeline__Provenance: {
+            /**
+             * Code Version
+             * @default 0.1.0
+             */
+            code_version: string;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Translator Model */
+            translator_model: string;
         };
     };
     responses: never;
@@ -1899,6 +2175,159 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TestCase"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    translate_api_translate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TranslateInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranslateResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_translation_api_translate__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranslateResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    answer_clarifications_api_translate__case_id__answers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClarificationAnswers"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranslateResponse"];
                 };
             };
             /** @description Not found */
