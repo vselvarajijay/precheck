@@ -7,7 +7,17 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from precheck import __version__
-from precheck.api import playground, policy, problems, rules, testing, tests, translate, validate
+from precheck.api import (
+    lab,
+    playground,
+    policy,
+    problems,
+    rules,
+    testing,
+    tests,
+    translate,
+    validate,
+)
 from precheck.api.deps import SettingsDep
 from precheck.authoring.seed import seed_demo
 from precheck.config import get_settings
@@ -61,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(translate.router)
     app.include_router(tests.router)
     app.include_router(policy.router)
+    app.include_router(lab.router)
     if get_settings().enable_test_reset:
         app.include_router(testing.router)
     app.include_router(validate.router)
