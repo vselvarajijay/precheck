@@ -1,0 +1,8 @@
+allowBuilds:
+  msw: false
+# Supply-chain guard: don't resolve packages published in the last 24h (minutes).
+minimumReleaseAge: 1440
+overrides:
+  '@asamuzakjp/css-color': 7.0.1
+  bundle-name: 4.1.0
+  '@tanstack/query-core': 5.103.2
