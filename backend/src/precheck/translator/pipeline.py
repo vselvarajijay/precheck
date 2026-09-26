@@ -103,7 +103,7 @@ def user_message(inp: TranslateInput) -> str:
     return "\n\n".join(parts)
 
 
-def semantic_problems(spec: RuleSpec) -> list[str]:
+def semantic_problems(spec: RuleSpec, gate_hint: Gate | None = None) -> list[str]:
     """Valid-but-wrong rules the schema can't catch; fed back to the LLM for repair."""
     body = spec.body
     problems = []
@@ -113,7 +113,34 @@ def semantic_problems(spec: RuleSpec) -> list[str]:
             "allows either way and has no effect; describe the violation (use negate if needed) "
             "with deny or escalate"
         )
+    tool_paths = sorted(p for p in _predicate_paths(body) if p.startswith(TOOL_FIELDS))
+    if spec.gate is Gate.egress and tool_paths and gate_hint is not Gate.egress:
+        problems.append(
+            f"gate is egress but the rule matches on {', '.join(tool_paths)}"
+            ", which only tool calls carry; an action the agent performs through a catalog tool "
+            "(e.g. http_request, send_email) is checked at the tool_call gate: use gate tool_call"
+        )
     return problems
+
+
+TOOL_FIELDS = ("request.tool", "request.args")
+
+
+def _predicate_paths(body: Any) -> set[str]:
+    found: set[str] = set()
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            if isinstance(node.get("path"), str):
+                found.add(node["path"])
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(body.model_dump(include={"applies_when", "deterministic"}))
+    return found
 
 
 def plan_message(inp: TranslateInput) -> str:
@@ -211,7 +238,7 @@ class Translator:
             rounds = 0
             while True:
                 text = await self._step("rules", messages)
-                specs, errors = self._convert_rules(text)
+                specs, errors = self._convert_rules(text, gate_hint=spec.gate)
                 if len(specs) != 1:
                     errors.append(f"expected exactly one refined rule, got {len(specs)}")
                 if not errors or rounds >= MAX_REPAIR_ROUNDS:
@@ -300,7 +327,7 @@ class Translator:
         while True:
             text = await self._step("rules", messages)
             await self._emit("validating")
-            specs, errors = self._convert_rules(text)
+            specs, errors = self._convert_rules(text, inp.gate_hint)
             if not errors or rounds >= MAX_REPAIR_ROUNDS:
                 break
             rounds += 1
@@ -333,7 +360,9 @@ class Translator:
         ]
 
     @staticmethod
-    def _convert_rules(text: str) -> tuple[list[RuleSpec], list[str]]:
+    def _convert_rules(
+        text: str, gate_hint: Gate | None = None
+    ) -> tuple[list[RuleSpec], list[str]]:
         try:
             draft = RulesDraft.model_validate_json(text)
         except ValidationError as e:
@@ -348,7 +377,9 @@ class Translator:
             if spec is not None:
                 if spec.id in specs:
                     errors.append(f"rules[{i}]: duplicate rule id {spec.id!r}")
-                errors.extend(f"rules[{i}] ({spec.id}): {p}" for p in semantic_problems(spec))
+                errors.extend(
+                    f"rules[{i}] ({spec.id}): {p}" for p in semantic_problems(spec, gate_hint)
+                )
                 specs[spec.id] = spec
         return list(specs.values()), errors
 

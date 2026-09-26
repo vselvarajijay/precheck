@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from precheck.schema import NoulQuestion, RuleSpec
+from precheck.schema import Gate, NoulQuestion, RuleSpec
 from precheck.schema.paths import parse_path
 from precheck.schema.predicate import selector_tools
 from precheck.translator.draft import Requirement
@@ -62,6 +62,13 @@ def lint_rule(rule: RuleSpec, existing: list[ExistingRule]) -> list[TranslationW
         out.append(TranslationWarning(rule_id=rule.id, code=code, message=message))
 
     body = rule.body
+    if rule.gate is Gate.egress:
+        warn(
+            "gate_not_enforced",
+            "The MCP enforcement proxy checks the tool_call and ingress gates only; this egress "
+            "rule needs an adapter that sends egress checks (use tool_call to check a tool such "
+            "as send_email or http_request).",
+        )
     if body.jev:
         for qid, q in body.jev.questions.items():
             if _NUMERIC.search(q.instructions):

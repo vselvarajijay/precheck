@@ -1,5 +1,6 @@
 import pytest
 
+from precheck.schema import Gate
 from precheck.translator.lints import ExistingRule
 from precheck.translator.pipeline import MAX_REPAIR_ROUNDS, TranslateInput, Translator, load_prompt
 
@@ -137,6 +138,36 @@ async def test_repair_loop_semantic_no_effect_allow() -> None:
     r = await Translator(llm).translate(INP)
     assert r.repair_rounds == 1
     assert "has no effect" in llm.calls[2]["messages"][-1]["content"]
+
+
+async def test_repair_loop_egress_rule_on_tool_fields_goes_to_tool_call() -> None:
+    """Enforcement checks catalog tools (http_request, send_email) at tool_call; an egress rule
+    matching request.tool / request.args would never fire."""
+    llm = FakeLLM(
+        {
+            "plan": [plan()],
+            "rules": [{"rules": [det_rule(gate="egress")]}, {"rules": [det_rule()]}],
+            "tests": [{"tests": []}],
+        }
+    )
+    r = await Translator(llm).translate(INP)
+    assert r.repair_rounds == 1
+    feedback = llm.calls[2]["messages"][-1]["content"]
+    assert "gate is egress but the rule matches on request.args.amount, request.tool" in feedback
+    assert r.rules[0].spec.gate == "tool_call"
+
+
+async def test_egress_hint_keeps_egress_rule_with_a_review_warning() -> None:
+    llm = FakeLLM(
+        {
+            "plan": [plan()],
+            "rules": [{"rules": [det_rule(gate="egress")]}],
+            "tests": [{"tests": []}],
+        }
+    )
+    r = await Translator(llm).translate(INP.model_copy(update={"gate_hint": Gate.egress}))
+    assert r.repair_rounds == 0 and r.rules[0].spec.gate == "egress"
+    assert "gate_not_enforced" in [w.code for w in r.rules[0].warnings]
 
 
 async def test_clarification_stops_after_plan_and_answers_resume() -> None:
