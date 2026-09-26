@@ -128,6 +128,8 @@ rules:
       Tool results (e.g. fetched web pages) are checked before the agent sees them; content
       that tries to give the agent new instructions is withheld.
     body:
+      # Only untrusted external content; internal tool results (orders, profiles) are trusted.
+      applies_when: { op: in, path: request.tool, values: [fetch_web_page] }
       requires: [request.text]
       jev:
         model: jev-1.13.0
