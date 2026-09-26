@@ -1,4 +1,4 @@
-import { PlusIcon } from 'lucide-react'
+import { LanguagesIcon, PlusIcon } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { type RuleFilters, useRules } from '@/api/rules'
 import { GATES, type Gate, type RuleStatus } from '@/api/types'
@@ -30,11 +30,18 @@ export function RulesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Rules</h1>
-        <Button asChild>
-          <Link to="/rules/new">
-            <PlusIcon /> New rule
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/rules/new">
+              <PlusIcon /> New rule (manual)
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/rules/translate">
+              <LanguagesIcon /> New from business case
+            </Link>
+          </Button>
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Input
@@ -87,7 +94,7 @@ export function RulesPage() {
           {data?.length === 0 && (
             <TableRow>
               <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                No rules match. Create one with “New rule”.
+                No rules match. Create one from a business case or by hand.
               </TableCell>
             </TableRow>
           )}

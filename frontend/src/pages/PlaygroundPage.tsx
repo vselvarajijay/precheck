@@ -1,11 +1,11 @@
 import { PlayIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useLocation, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { useEvaluate, useExamples, useLoadPack, usePlaygroundRuns } from '@/api/playground'
 import { ApiError } from '@/api/problem'
 import { useRules } from '@/api/rules'
-import type { CheckRequest, EvaluateResponse, EvaluateScope } from '@/api/types'
+import type { CheckRequest, EvaluateResponse, EvaluateScope, RuleSpec } from '@/api/types'
 import { DecisionPanel } from '@/components/decision/DecisionPanel'
 import { SaveTestCase } from '@/components/playground/SaveTestCase'
 import { ScenarioBuilder } from '@/components/playground/ScenarioBuilder'
@@ -20,8 +20,13 @@ type ScopeKind = EvaluateScope['kind']
 export function PlaygroundPage() {
   const [params] = useSearchParams()
   const preselected = params.get('rule')
-  const [form, setForm] = useState<CheckRequestForm>(emptyForm)
-  const [scopeKind, setScopeKind] = useState<ScopeKind>(preselected ? 'rules' : 'draft')
+  // "Try in playground" from a fresh translation passes unsaved rules (+ a generated test).
+  const handoff = useLocation().state as { inlineRules?: RuleSpec[]; checkRequest?: CheckRequest } | null
+  const inlineRules = handoff?.inlineRules ?? []
+  const [form, setForm] = useState<CheckRequestForm>(() =>
+    handoff?.checkRequest ? formFromRequest(handoff.checkRequest) : emptyForm(),
+  )
+  const [scopeKind, setScopeKind] = useState<ScopeKind>(inlineRules.length ? 'inline' : preselected ? 'rules' : 'draft')
   const [selected, setSelected] = useState<string[]>(preselected ? [preselected] : [])
   const [result, setResult] = useState<{ response: EvaluateResponse; request: CheckRequest } | null>(null)
   const [formErrors, setFormErrors] = useState<string[]>([])
@@ -40,8 +45,12 @@ export function PlaygroundPage() {
   }, [exampleParam, examples.data])
 
   const scope: EvaluateScope = useMemo(
-    () => ({ kind: scopeKind, rule_ids: scopeKind === 'rules' ? selected : [] }),
-    [scopeKind, selected],
+    () => ({
+      kind: scopeKind,
+      rule_ids: scopeKind === 'rules' ? selected : [],
+      inline_rules: scopeKind === 'inline' ? inlineRules : [],
+    }),
+    [scopeKind, selected, inlineRules],
   )
 
   const run = async () => {
@@ -99,6 +108,9 @@ export function PlaygroundPage() {
                 <option value="draft">Draft rules (latest versions)</option>
                 <option value="live">Live rules (published)</option>
                 <option value="rules">Selected rules…</option>
+                {inlineRules.length > 0 && (
+                  <option value="inline">Unsaved: {inlineRules.map((r) => r.id).join(', ')}</option>
+                )}
               </NativeSelect>
             </div>
             {scopeKind === 'rules' && (

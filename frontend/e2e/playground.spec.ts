@@ -41,7 +41,8 @@ test('refund example: different card DENY, same card ALLOW, save test case', asy
   await page.getByTestId('save-test-case').getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText(/Saved test case “same card refund”/)).toBeVisible()
 
-  await expect(page.getByTestId('run-history').locator('li')).toHaveCount(2)
+  // Other specs share the e2e database, so only require our two runs to be listed.
+  await expect.poll(() => page.getByTestId('run-history').locator('li').count()).toBeGreaterThanOrEqual(2)
 
   await page.goto('/rules/refund-different-payment-method')
   await page.getByRole('tab', { name: 'Tests' }).click()
