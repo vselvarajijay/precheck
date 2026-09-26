@@ -155,6 +155,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rules/{rule_id}/apply-bands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Bands To Draft
+         * @description Write suggested bands as a new draft version of the rule.
+         */
+        post: operations["apply_bands_to_draft_api_rules__rule_id__apply_bands_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rules/{rule_id}/calibrate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Calibrate
+         * @description Suggest bands from a run's stored answers (latest run by default). Never applies them
+         *     and never calls Jev.
+         */
+        post: operations["calibrate_api_rules__rule_id__calibrate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rules/{rule_id}/generate-tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate Tests
+         * @description Ask the translator for more test cases for this rule (saved, origin=generated).
+         */
+        post: operations["generate_tests_api_rules__rule_id__generate_tests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rules/{rule_id}/status": {
         parameters: {
             query?: never;
@@ -216,10 +277,71 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Test Cases */
+        get: operations["list_test_cases_api_test_cases_get"];
         put?: never;
         /** Create Test Case */
         post: operations["create_test_case_api_test_cases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/test-cases/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Test Case */
+        get: operations["get_test_case_api_test_cases__case_id__get"];
+        /** Update Test Case */
+        put: operations["update_test_case_api_test_cases__case_id__put"];
+        post?: never;
+        /** Delete Test Case */
+        delete: operations["delete_test_case_api_test_cases__case_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/test-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Test Runs
+         * @description Recent runs without per-case results (fetch one run for details).
+         */
+        get: operations["test_runs_api_test_runs_get"];
+        put?: never;
+        /**
+         * Create Test Run
+         * @description Run a rule's golden set (scope=rule) or every case (scope=policy) against draft or live.
+         */
+        post: operations["create_test_run_api_test_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/test-runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Test Run */
+        get: operations["test_run_api_test_runs__run_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -424,6 +546,13 @@ export interface components {
             /** Predicates */
             predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"])[];
         };
+        /** ApplyBands */
+        ApplyBands: {
+            /** Bands */
+            bands: {
+                [key: string]: components["schemas"]["Bands"];
+            };
+        };
         /**
          * Bands
          * @description Thresholds, inclusive: value >= deny_at -> deny; >= escalate_at -> escalate; else allow.
@@ -435,6 +564,20 @@ export interface components {
             deny_at: number;
             /** Escalate At */
             escalate_at: number;
+        };
+        /** CalibrationResult */
+        CalibrationResult: {
+            /** Notes */
+            notes?: string[];
+            /** Questions */
+            questions: components["schemas"]["QuestionCalibration"][];
+            /** Rule Id */
+            rule_id: string;
+            /** Rule Version */
+            rule_version: number;
+            /** Run Id */
+            run_id: string;
+            severity: components["schemas"]["Severity"];
         };
         /**
          * CheckRequest
@@ -695,6 +838,15 @@ export interface components {
          * @enum {string}
          */
         Gate: "tool_call" | "egress" | "ingress";
+        /** GenerateTestsResult */
+        GenerateTestsResult: {
+            /** Cost Usd */
+            cost_usd: number;
+            /** Created */
+            created: components["schemas"]["TestCase"][];
+            /** Errors */
+            errors: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -876,6 +1028,12 @@ export interface components {
             id: string;
             scope: components["schemas"]["EvaluateScope"];
         };
+        /** Point */
+        Point: {
+            expected: components["schemas"]["Verdict"];
+            /** Value */
+            value: number;
+        };
         /** Problem */
         Problem: {
             /** Detail */
@@ -891,6 +1049,30 @@ export interface components {
              * @default about:blank
              */
             type: string;
+        };
+        /** QuestionCalibration */
+        QuestionCalibration: {
+            current: components["schemas"]["Suggestion"];
+            /** Points */
+            points: components["schemas"]["Point"][];
+            /** Question Id */
+            question_id: string;
+            /** Range */
+            range: [
+                number,
+                number
+            ];
+            suggested: components["schemas"]["Suggestion"];
+            /** Type */
+            type: string;
+        };
+        /** QuestionOutcome */
+        QuestionOutcome: {
+            /** Band */
+            band: string;
+            /** Value */
+            value: number;
+            verdict: components["schemas"]["Verdict"];
         };
         /**
          * QuestionResult
@@ -1401,6 +1583,16 @@ export interface components {
          * @enum {string}
          */
         Severity: "low" | "medium" | "high";
+        /** Suggestion */
+        Suggestion: {
+            bands: components["schemas"]["Bands"];
+            /** Correct */
+            correct: number;
+            /** Cost */
+            cost: number;
+            /** Total */
+            total: number;
+        };
         /** TestCase */
         TestCase: {
             check_request: components["schemas"]["CheckRequest"];
@@ -1455,6 +1647,96 @@ export interface components {
              * @enum {string}
              */
             origin: "user" | "generated" | "playground";
+        };
+        /** TestCaseUpdate */
+        TestCaseUpdate: {
+            check_request?: components["schemas"]["CheckRequest"] | null;
+            expected_verdict?: components["schemas"]["Verdict"] | null;
+            /** Name */
+            name?: string | null;
+        };
+        /** TestResult */
+        TestResult: {
+            actual: components["schemas"]["Verdict"] | null;
+            /** Error */
+            error?: string | null;
+            expected: components["schemas"]["Verdict"];
+            /**
+             * Jev
+             * @description rule -> question -> outcome
+             */
+            jev?: {
+                [key: string]: {
+                    [key: string]: components["schemas"]["QuestionOutcome"];
+                };
+            };
+            /**
+             * Latency Ms
+             * @default 0
+             */
+            latency_ms: number;
+            /** Name */
+            name: string;
+            /** Passed */
+            passed: boolean;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /** Rule Id */
+            rule_id: string | null;
+            /** Test Case Id */
+            test_case_id: string;
+        };
+        /** TestRun */
+        TestRun: {
+            /** Cost Estimate */
+            cost_estimate: number;
+            /** Error Count */
+            error_count: number;
+            /** Fail Count */
+            fail_count: number;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: string;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Jev Model */
+            jev_model: string | null;
+            /** Pass Count */
+            pass_count: number;
+            /** Results */
+            results?: components["schemas"]["TestResult"][];
+            /** Rule Id */
+            rule_id: string | null;
+            /** Rule Status */
+            rule_status: string;
+            /** Scope */
+            scope: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+        };
+        /** TestRunRequest */
+        TestRunRequest: {
+            /** Rule Id */
+            rule_id?: string | null;
+            /**
+             * Rule Status
+             * @default draft
+             * @enum {string}
+             */
+            rule_status: "draft" | "live";
+            /**
+             * Scope
+             * @default rule
+             * @enum {string}
+             */
+            scope: "rule" | "policy";
         };
         /** TranslateInput */
         TranslateInput: {
@@ -2126,6 +2408,159 @@ export interface operations {
             };
         };
     };
+    apply_bands_to_draft_api_rules__rule_id__apply_bands_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyBands"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleUpdateResult"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    calibrate_api_rules__rule_id__calibrate_post: {
+        parameters: {
+            query?: {
+                run_id?: string | null;
+            };
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalibrationResult"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    generate_tests_api_rules__rule_id__generate_tests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerateTestsResult"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     set_rule_status_api_rules__rule_id__status_post: {
         parameters: {
             query?: never;
@@ -2278,6 +2713,57 @@ export interface operations {
             };
         };
     };
+    list_test_cases_api_test_cases_get: {
+        parameters: {
+            query?: {
+                rule_id?: string | null;
+                /** @description Only policy-wide cases */
+                policy?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCase"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     create_test_case_api_test_cases_post: {
         parameters: {
             query?: never;
@@ -2298,6 +2784,305 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TestCase"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_test_case_api_test_cases__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCase"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_test_case_api_test_cases__case_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestCaseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCase"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_test_case_api_test_cases__case_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    test_runs_api_test_runs_get: {
+        parameters: {
+            query?: {
+                rule_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestRun"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_test_run_api_test_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestRun"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    test_run_api_test_runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestRun"];
                 };
             };
             /** @description Not found */

@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { test as base, expect, type Page } from '@playwright/test'
+import { test as base, expect, type APIRequestContext, type Page } from '@playwright/test'
 
 interface ConsoleGuard {
   /** Declare an expected console error (e.g. a deliberate 422); each match is consumed once. */
@@ -37,3 +37,9 @@ export async function expectNoSeriousA11yViolations(page: Page) {
 }
 
 export const API = process.env.E2E_API_URL ?? 'http://127.0.0.1:8000'
+
+/** Empty the isolated e2e database (endpoint exists only there). */
+export async function resetDb(request: APIRequestContext) {
+  const res = await request.post(`${API}/api/testing/reset`)
+  expect(res.status(), 'test reset endpoint').toBe(204)
+}

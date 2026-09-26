@@ -1,4 +1,6 @@
-import { expect, expectNoSeriousA11yViolations, test } from './fixtures'
+import { expect, expectNoSeriousA11yViolations, resetDb, test } from './fixtures'
+
+test.beforeEach(async ({ request }) => resetDb(request))
 
 const DEMO_RULES = ['refund-over-limit', 'refund-different-payment-method', 'reason-required', 'pii-to-external-domain']
 
@@ -41,8 +43,7 @@ test('refund example: different card DENY, same card ALLOW, save test case', asy
   await page.getByTestId('save-test-case').getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText(/Saved test case “same card refund”/)).toBeVisible()
 
-  // Other specs share the e2e database, so only require our two runs to be listed.
-  await expect.poll(() => page.getByTestId('run-history').locator('li').count()).toBeGreaterThanOrEqual(2)
+  await expect(page.getByTestId('run-history').locator('li')).toHaveCount(2)
 
   await page.goto('/rules/refund-different-payment-method')
   await page.getByRole('tab', { name: 'Tests' }).click()
