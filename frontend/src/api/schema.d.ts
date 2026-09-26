@@ -4,6 +4,80 @@
  */
 
 export interface paths {
+    "/api/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Evaluate Request
+         * @description Evaluate against draft (latest versions), live (published versions) or chosen rules.
+         */
+        post: operations["evaluate_request_api_evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/examples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Examples */
+        get: operations["examples_api_examples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/examples/packs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Example Packs */
+        get: operations["example_packs_api_examples_packs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/examples/packs/{name}/load": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Load Example Pack
+         * @description Create the pack's rules as drafts; rules whose ids already exist are skipped.
+         */
+        post: operations["load_example_pack_api_examples_packs__name__load_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -13,6 +87,23 @@ export interface paths {
         };
         /** Health */
         get: operations["health_api_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/playground/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Playground Runs */
+        get: operations["playground_runs_api_playground_runs_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -84,6 +175,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rules/{rule_id}/test-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rule Test Cases */
+        get: operations["rule_test_cases_api_rules__rule_id__test_cases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rules/{rule_id}/versions/{version}": {
         parameters: {
             query?: never;
@@ -95,6 +203,23 @@ export interface paths {
         get: operations["get_rule_version_api_rules__rule_id__versions__version__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/test-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Test Case */
+        post: operations["create_test_case_api_test_cases_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -207,6 +332,22 @@ export interface components {
             reason?: string | null;
             request: components["schemas"]["RequestedAction"];
         };
+        /** ChoiceAnswer */
+        ChoiceAnswer: {
+            /** Choice */
+            choice: string;
+            /** Confidence */
+            confidence: number;
+            /** Probabilities */
+            probabilities?: {
+                [key: string]: number;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "choice";
+        };
         /**
          * ChoiceOutcome
          * @description Each option maps to a verdict; confidence below `min_confidence` escalates.
@@ -266,6 +407,42 @@ export interface components {
             /** User Goal */
             user_goal?: string | null;
         };
+        /** Decision */
+        Decision: {
+            /**
+             * Gate Default Applied
+             * @default false
+             */
+            gate_default_applied: boolean;
+            /**
+             * Latency Ms
+             * @default 0
+             */
+            latency_ms: number;
+            /** Rule Results */
+            rule_results?: components["schemas"]["RuleResult"][];
+            usage?: components["schemas"]["JevUsage"];
+            verdict: components["schemas"]["Verdict"];
+            versions: components["schemas"]["DecisionVersions"];
+        };
+        /** DecisionVersions */
+        DecisionVersions: {
+            /** Engine */
+            engine: string;
+            /** Jev Model */
+            jev_model?: string | null;
+            /** Policy */
+            policy?: string | null;
+            /** Rules */
+            rules?: {
+                [key: string]: number;
+            };
+            /**
+             * Schema
+             * @default 1
+             */
+            schema: number;
+        };
         /**
          * DeterministicCheck
          * @description When `predicate` is true the rule's verdict is `verdict_when_true` and its Jev check
@@ -288,6 +465,53 @@ export interface components {
             op: "domain_in" | "domain_not_in";
             /** Path */
             path: string;
+        };
+        /** EvaluateRequest */
+        EvaluateRequest: {
+            check_request: components["schemas"]["CheckRequest"];
+            scope?: components["schemas"]["EvaluateScope"];
+        };
+        /** EvaluateResponse */
+        EvaluateResponse: {
+            decision: components["schemas"]["Decision"];
+            /**
+             * Rules
+             * @description The rules evaluated, keyed by id
+             */
+            rules: {
+                [key: string]: components["schemas"]["RuleInfo"];
+            };
+            /** Run Id */
+            run_id: string;
+        };
+        /**
+         * EvaluateScope
+         * @description draft: every non-archived rule at its latest version (previews unpublished edits).
+         *     live: live rules at their published version (what enforcement runs).
+         *     rules: the listed rules at their latest version.
+         */
+        EvaluateScope: {
+            /**
+             * Kind
+             * @default draft
+             * @enum {string}
+             */
+            kind: "draft" | "live" | "rules";
+            /** Rule Ids */
+            rule_ids?: string[];
+        };
+        /** Example */
+        Example: {
+            check_request: components["schemas"]["CheckRequest"];
+            /** Description */
+            description: string;
+            expected_verdict?: components["schemas"]["Verdict"] | null;
+            /** Id */
+            id: string;
+            /** Pack */
+            pack?: string | null;
+            /** Title */
+            title: string;
         };
         /** ExistsPredicate */
         ExistsPredicate: {
@@ -361,6 +585,19 @@ export interface components {
              */
             state_template: string[];
         };
+        /** JevUsage */
+        JevUsage: {
+            /**
+             * Input Tokens
+             * @default 0
+             */
+            input_tokens: number;
+            /**
+             * Output Tokens
+             * @default 0
+             */
+            output_tokens: number;
+        };
         /** MinLenPredicate */
         MinLenPredicate: {
             /**
@@ -382,6 +619,16 @@ export interface components {
             op: "not";
             /** Predicate */
             predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"];
+        };
+        /** NoulAnswer */
+        NoulAnswer: {
+            /** Noul */
+            noul: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "noul";
         };
         /** NoulCriteria */
         NoulCriteria: {
@@ -419,6 +666,33 @@ export interface components {
              */
             type: "noul";
         };
+        /** PackInfo */
+        PackInfo: {
+            /** Name */
+            name: string;
+            /** Rule Ids */
+            rule_ids: string[];
+        };
+        /** PackLoadResult */
+        PackLoadResult: {
+            /** Created */
+            created: string[];
+            /** Skipped */
+            skipped: string[];
+        };
+        /** PlaygroundRun */
+        PlaygroundRun: {
+            check_request: components["schemas"]["CheckRequest"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            decision: components["schemas"]["Decision"];
+            /** Id */
+            id: string;
+            scope: components["schemas"]["EvaluateScope"];
+        };
         /** Problem */
         Problem: {
             /** Detail */
@@ -441,6 +715,25 @@ export interface components {
             prompt_version?: string | null;
             /** Translator Model */
             translator_model?: string | null;
+        };
+        /**
+         * QuestionResult
+         * @description One Jev question's answer and the verdict it mapped to.
+         */
+        QuestionResult: {
+            /** Answer */
+            answer: components["schemas"]["NoulAnswer"] | components["schemas"]["ChoiceAnswer"] | components["schemas"]["ScoreAnswer"];
+            /**
+             * Band
+             * @description Which band/branch was hit, e.g. 'deny (>= 0.7)'
+             */
+            band: string;
+            /**
+             * Value
+             * @description The number compared with the bands (or the confidence)
+             */
+            value: number;
+            verdict: components["schemas"]["Verdict"];
         };
         /** RegexPredicate */
         RegexPredicate: {
@@ -585,6 +878,52 @@ export interface components {
             /** Versions */
             versions: components["schemas"]["VersionSummary"][];
         };
+        /** RuleInfo */
+        RuleInfo: {
+            body: components["schemas"]["RuleBody"];
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "live" | "archived";
+            /** Version */
+            version: number;
+        };
+        /** RuleResult */
+        RuleResult: {
+            /** Error */
+            error?: string | null;
+            /** Jev */
+            jev?: {
+                [key: string]: components["schemas"]["QuestionResult"];
+            };
+            /** Matched */
+            matched: boolean;
+            /** Missing Fields */
+            missing_fields?: string[];
+            /** Predicate Inputs */
+            predicate_inputs?: {
+                [key: string]: unknown;
+            };
+            /** Predicate Result */
+            predicate_result?: boolean | null;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /** Rule Id */
+            rule_id: string;
+            /** Rule Version */
+            rule_version?: number | null;
+            /** Source */
+            source?: ("missing_fields" | "deterministic" | "jev" | "error" | "no_verdict") | null;
+            verdict?: components["schemas"]["Verdict"] | null;
+        };
         /** RuleStatusChange */
         RuleStatusChange: {
             /**
@@ -721,6 +1060,26 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** ScoreAnswer */
+        ScoreAnswer: {
+            /** Confidence */
+            confidence: number;
+            /** Legend */
+            legend?: {
+                [key: string]: string;
+            };
+            /** Probabilities */
+            probabilities?: {
+                [key: string]: number;
+            };
+            /** Score */
+            score: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "score";
+        };
         /**
          * ScoreOutcome
          * @description Bands on the expected score (a float in [0, levels-1]); low confidence escalates.
@@ -770,6 +1129,45 @@ export interface components {
          * @enum {string}
          */
         Severity: "low" | "medium" | "high";
+        /** TestCase */
+        TestCase: {
+            check_request: components["schemas"]["CheckRequest"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            expected_verdict: components["schemas"]["Verdict"];
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "user" | "generated" | "playground";
+            /** Rule Id */
+            rule_id: string | null;
+        };
+        /** TestCaseCreate */
+        TestCaseCreate: {
+            check_request: components["schemas"]["CheckRequest"];
+            expected_verdict: components["schemas"]["Verdict"];
+            /** Name */
+            name: string;
+            /**
+             * Origin
+             * @default user
+             * @enum {string}
+             */
+            origin: "user" | "generated" | "playground";
+            /**
+             * Rule Id
+             * @description None = policy-wide case
+             */
+            rule_id?: string | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -812,6 +1210,200 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    evaluate_request_api_evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluateResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    examples_api_examples_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Example"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    example_packs_api_examples_packs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackInfo"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    load_example_pack_api_examples_packs__name__load_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackLoadResult"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     health_api_health_get: {
         parameters: {
             query?: never;
@@ -828,6 +1420,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    playground_runs_api_playground_runs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaygroundRun"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -1139,6 +1780,55 @@ export interface operations {
             };
         };
     };
+    rule_test_cases_api_rules__rule_id__test_cases_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCase"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_rule_version_api_rules__rule_id__versions__version__get: {
         parameters: {
             query?: never;
@@ -1158,6 +1848,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RuleVersion"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_test_case_api_test_cases_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestCaseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCase"];
                 };
             };
             /** @description Not found */
