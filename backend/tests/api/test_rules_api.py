@@ -89,3 +89,13 @@ def test_applies_to_tools_summary(make_client) -> None:
     }
     r = new_rule(c, body=body)
     assert r["applies_to_tools"] == ["issue_refund"]
+
+
+def test_problem_field_paths_keep_nested_body(make_client) -> None:
+    c = make_client()
+    bad = noul_rule(model="gpt")
+    resp = c.post("/api/rules", json={"name": "x", "gate": "tool_call", "body": bad})
+    assert [e["field"] for e in resp.json()["errors"]] == ["body.jev.model"]
+    resp = c.post("/api/validate/rule-body", json=bad)
+    assert resp.status_code == 200
+    assert [e["field"] for e in resp.json()["errors"]] == ["jev.model"]

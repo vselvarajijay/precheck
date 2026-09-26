@@ -76,12 +76,52 @@ services:
       target: dev
     profiles: ["test"]
     network_mode: none
+    environment:
+      CI: "true"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     command: ["pnpm", "test"]
 
-  # --- profile: e2e (Playwright against the running stack) --------------------
+  # --- profile: e2e (Playwright against an isolated stack: fresh DB, Jev replay) -----
+  api-e2e:
+    <<: *backend
+    profiles: ["e2e"]
+    environment:
+      DB_PATH: /tmp/e2e/app.db
+      JEV_MODE: replay
+      TYPESAFE_API_KEY: ""
+      ANTHROPIC_API_KEY: ""
+    tmpfs:
+      - /tmp/e2e:uid=1000,gid=1000
+    command: ["uvicorn", "precheck.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  web-e2e:
+    image: precheck-frontend:dev
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: dev
+    profiles: ["e2e"]
+    environment:
+      API_URL: http://api-e2e:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      api-e2e:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+
   e2e:
     build:
       context: .
@@ -90,11 +130,12 @@ services:
     image: precheck-e2e:dev
     profiles: ["e2e"]
     environment:
-      E2E_BASE_URL: http://web:5173
+      E2E_BASE_URL: http://web-e2e:5173
+      E2E_API_URL: http://api-e2e:8000
     volumes:
       - ./frontend/e2e:/app/e2e
       - ./frontend/playwright.config.ts:/app/playwright.config.ts
       - ./frontend/test-results:/app/test-results
     depends_on:
-      web:
+      web-e2e:
         condition: service_healthy

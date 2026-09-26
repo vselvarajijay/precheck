@@ -15,7 +15,8 @@ class Health(BaseModel):
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="precheck", version=__version__)
+    # One schema per model (no -Input/-Output split) keeps the generated TS types simple.
+    app = FastAPI(title="precheck", version=__version__, separate_input_output_schemas=False)
 
     @app.get("/api/health", response_model=Health, tags=["meta"])
     def health(settings: SettingsDep) -> Health:

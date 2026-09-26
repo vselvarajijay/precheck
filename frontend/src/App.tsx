@@ -1,7 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, Navigate, RouterProvider, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
+import { Toaster } from '@/components/ui/sonner'
 import { Placeholder } from '@/pages/Placeholder'
+import { NewRulePage } from '@/pages/rules/NewRulePage'
+import { RuleDetailPage } from '@/pages/rules/RuleDetailPage'
+import { RulesPage } from '@/pages/rules/RulesPage'
 
 export const routes: RouteObject[] = [
   {
@@ -9,7 +13,9 @@ export const routes: RouteObject[] = [
     element: <AppShell />,
     children: [
       { index: true, element: <Navigate to="/rules" replace /> },
-      { path: 'rules', element: <Placeholder title="Rules" /> },
+      { path: 'rules', element: <RulesPage /> },
+      { path: 'rules/new', element: <NewRulePage /> },
+      { path: 'rules/:ruleId', element: <RuleDetailPage /> },
       { path: 'playground', element: <Placeholder title="Playground" /> },
       { path: 'tests', element: <Placeholder title="Tests" /> },
       { path: 'settings', element: <Placeholder title="Settings" /> },
@@ -24,6 +30,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <Toaster closeButton />
     </QueryClientProvider>
   )
 }

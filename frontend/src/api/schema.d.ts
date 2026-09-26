@@ -132,7 +132,7 @@ export interface paths {
         put?: never;
         /**
          * Validate Rule Body
-         * @description 422 if the body is invalid; otherwise its hash and anything blocking publication.
+         * @description Validate a candidate RuleBody; `live_problems` lists what blocks publication.
          */
         post: operations["validate_rule_body_api_validate_rule_body_post"];
         delete?: never;
@@ -159,44 +159,24 @@ export interface components {
             purpose?: string | null;
         };
         /** AllPredicate */
-        "AllPredicate-Input": {
+        AllPredicate: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             op: "all";
             /** Predicates */
-            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"])[];
-        };
-        /** AllPredicate */
-        "AllPredicate-Output": {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            op: "all";
-            /** Predicates */
-            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"])[];
+            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"])[];
         };
         /** AnyPredicate */
-        "AnyPredicate-Input": {
+        AnyPredicate: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             op: "any";
             /** Predicates */
-            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"])[];
-        };
-        /** AnyPredicate */
-        "AnyPredicate-Output": {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            op: "any";
-            /** Predicates */
-            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"])[];
+            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"])[];
         };
         /**
          * Bands
@@ -292,20 +272,9 @@ export interface components {
          *     is skipped; a deny short-circuits the whole decision. When false, the Jev check (if any)
          *     decides, otherwise the rule allows.
          */
-        "DeterministicCheck-Input": {
+        DeterministicCheck: {
             /** Predicate */
-            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"];
-            verdict_when_true: components["schemas"]["Verdict"];
-        };
-        /**
-         * DeterministicCheck
-         * @description When `predicate` is true the rule's verdict is `verdict_when_true` and its Jev check
-         *     is skipped; a deny short-circuits the whole decision. When false, the Jev check (if any)
-         *     decides, otherwise the rule allows.
-         */
-        "DeterministicCheck-Output": {
-            /** Predicate */
-            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"];
+            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"];
             verdict_when_true: components["schemas"]["Verdict"];
         };
         /** DomainPredicate */
@@ -405,24 +374,14 @@ export interface components {
             value: number;
         };
         /** NotPredicate */
-        "NotPredicate-Input": {
+        NotPredicate: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             op: "not";
             /** Predicate */
-            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"];
-        };
-        /** NotPredicate */
-        "NotPredicate-Output": {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            op: "not";
-            /** Predicate */
-            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"];
+            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"];
         };
         /** NoulCriteria */
         NoulCriteria: {
@@ -526,37 +485,13 @@ export interface components {
          * RuleBody
          * @description The versioned, hashed part of a rule: everything that can change a verdict.
          */
-        "RuleBody-Input": {
+        RuleBody: {
             /**
              * Applies When
              * @description Cheap selector; absent = applies to every request at the gate
              */
-            applies_when?: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"]) | null;
-            deterministic?: components["schemas"]["DeterministicCheck-Input"] | null;
-            jev?: components["schemas"]["JevCheck"] | null;
-            /** @description Verdict when Jev fails; absent = gate/severity default */
-            on_error?: components["schemas"]["Verdict"] | null;
-            /** @default escalate */
-            on_missing: components["schemas"]["Verdict"];
-            /**
-             * Requires
-             * @description Fields that must be present, else `on_missing`
-             */
-            requires?: string[];
-            /** @default medium */
-            severity: components["schemas"]["Severity"];
-        };
-        /**
-         * RuleBody
-         * @description The versioned, hashed part of a rule: everything that can change a verdict.
-         */
-        "RuleBody-Output": {
-            /**
-             * Applies When
-             * @description Cheap selector; absent = applies to every request at the gate
-             */
-            applies_when?: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"]) | null;
-            deterministic?: components["schemas"]["DeterministicCheck-Output"] | null;
+            applies_when?: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"]) | null;
+            deterministic?: components["schemas"]["DeterministicCheck"] | null;
             jev?: components["schemas"]["JevCheck"] | null;
             /** @description Verdict when Jev fails; absent = gate/severity default */
             on_error?: components["schemas"]["Verdict"] | null;
@@ -573,15 +508,22 @@ export interface components {
         /** RuleBodyValidation */
         RuleBodyValidation: {
             /** Content Hash */
-            content_hash: string;
+            content_hash?: string | null;
+            /** Errors */
+            errors: components["schemas"]["FieldError"][];
             /** Jev Model */
-            jev_model: string | null;
-            /** Live Problems */
+            jev_model?: string | null;
+            /**
+             * Live Problems
+             * @default []
+             */
             live_problems: string[];
+            /** Valid */
+            valid: boolean;
         };
         /** RuleCreate */
         RuleCreate: {
-            body: components["schemas"]["RuleBody-Input"];
+            body: components["schemas"]["RuleBody"];
             /** Explanation */
             explanation?: string | null;
             gate: components["schemas"]["Gate"];
@@ -696,7 +638,7 @@ export interface components {
         };
         /** RuleUpdate */
         RuleUpdate: {
-            body: components["schemas"]["RuleBody-Input"];
+            body: components["schemas"]["RuleBody"];
             /** Explanation */
             explanation?: string | null;
             /** Name */
@@ -759,7 +701,7 @@ export interface components {
         };
         /** RuleVersion */
         RuleVersion: {
-            body: components["schemas"]["RuleBody-Output"];
+            body: components["schemas"]["RuleBody"];
             /** Content Hash */
             content_hash: string;
             /** Created At */
@@ -1289,7 +1231,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RuleBody-Input"];
+                "application/json": {
+                    [key: string]: unknown;
+                };
             };
         };
         responses: {

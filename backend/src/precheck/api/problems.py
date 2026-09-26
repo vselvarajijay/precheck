@@ -36,7 +36,9 @@ def problem(
 
 
 def _loc(loc: tuple[Any, ...]) -> str:
-    return ".".join(str(p) for p in loc if p != "body") or "body"
+    """Field path without FastAPI's leading `body` marker (`body.body.jev` -> `body.jev`)."""
+    parts = list(loc[1:] if loc and loc[0] == "body" else loc)
+    return ".".join(str(p) for p in parts) or "body"
 
 
 def install(app: FastAPI) -> None:

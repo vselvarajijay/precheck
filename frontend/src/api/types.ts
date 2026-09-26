@@ -1,0 +1,32 @@
+import type { components } from './schema'
+
+type S = components['schemas']
+
+export type Gate = S['Gate']
+export type Verdict = S['Verdict']
+export type Severity = S['Severity']
+export type RuleStatus = S['RuleSummary']['status']
+export type RuleBody = S['RuleBody']
+export type RuleSummary = S['RuleSummary']
+export type RuleDetail = S['RuleDetail']
+export type RuleVersion = S['RuleVersion']
+export type RuleCreate = S['RuleCreate']
+export type RuleUpdate = S['RuleUpdate']
+export type JevCheck = S['JevCheck']
+export type JevQuestion = JevCheck['questions'][string]
+export type Outcome = JevCheck['outcomes'][string]
+export type NoulQuestion = S['NoulQuestion']
+export type ChoiceQuestion = S['ChoiceQuestion']
+export type ScoreQuestion = S['ScoreQuestion']
+export type NoulOutcome = S['NoulOutcome']
+export type ChoiceOutcome = S['ChoiceOutcome']
+export type ScoreOutcome = S['ScoreOutcome']
+export type Bands = S['Bands']
+export type DeterministicCheck = S['DeterministicCheck']
+export type Predicate = NonNullable<RuleBody['applies_when']>
+export type Problem = S['Problem']
+export type FieldError = S['FieldError']
+
+export const GATES: Gate[] = ['tool_call', 'egress', 'ingress']
+export const VERDICTS: Verdict[] = ['allow', 'escalate', 'deny']
+export const SEVERITIES: Severity[] = ['low', 'medium', 'high']
