@@ -1,6 +1,6 @@
 {
   "request": {
-    "model": "jev-latest",
+    "model": "jev-1.13.0",
     "questions": {
       "refund-different-payment-method__different_method": {
         "criteria": {
@@ -24,7 +24,7 @@
       "request": {
         "args": {
           "amount": 120,
-          "destination": "Visa ending 4242",
+          "destination": "Mastercard ending 9911",
           "order_id": "1234"
         },
         "kind": "tool_call",
@@ -35,13 +35,13 @@
   "response": {
     "answers": {
       "refund-different-payment-method__different_method": {
-        "noul": 0.03,
+        "noul": 0.96,
         "type": "noul"
       }
     },
     "model": "jev-1.13.0",
     "usage": {
-      "input_tokens": 450,
+      "input_tokens": 452,
       "output_tokens": 28
     }
   }

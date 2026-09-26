@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     llm_mode: Literal["live", "record", "replay", "cache"] = "live"
     llm_fixtures_dir: Path = REPO_ROOT / "backend" / "tests" / "fixtures" / "llm"
     examples_dir: Path = REPO_ROOT / "backend" / "examples"
+    # Seed backend/examples/rulepacks/demo.yaml as live rules on API start (idempotent).
+    seed_demo: bool = False
     # Only the isolated e2e stack sets this: exposes POST /api/testing/reset.
     enable_test_reset: bool = False
     db_path: Path = REPO_ROOT / "data" / "app.db"

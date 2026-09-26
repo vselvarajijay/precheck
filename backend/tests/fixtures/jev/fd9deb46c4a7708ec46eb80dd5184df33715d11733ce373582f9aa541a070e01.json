@@ -1,6 +1,6 @@
 {
   "request": {
-    "model": "jev-latest",
+    "model": "jev-1.13.0",
     "questions": {
       "reason-required__justified": {
         "criteria": {
@@ -41,7 +41,7 @@
         "type": "noul"
       },
       "reason-required__manipulation": {
-        "noul": 0.07,
+        "noul": 0.08,
         "type": "noul"
       }
     },

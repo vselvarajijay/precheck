@@ -119,7 +119,9 @@ export function RulesPage() {
               <TableCell>
                 <GateBadge gate={r.gate} />
               </TableCell>
-              <TableCell className="font-mono text-xs">{r.applies_to_tools.join(', ') || 'all'}</TableCell>
+              <TableCell className="max-w-56 truncate font-mono text-xs" title={r.applies_to_tools.join(', ') || 'all'}>
+                {r.applies_to_tools.join(', ') || 'all'}
+              </TableCell>
               <TableCell>
                 <CheckBadges deterministic={r.has_deterministic} jev={r.has_jev} />
               </TableCell>
