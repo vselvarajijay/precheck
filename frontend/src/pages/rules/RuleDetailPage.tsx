@@ -38,6 +38,11 @@ export function RuleDetailPage() {
             <GateBadge gate={rule.gate} />
             <StatusBadge status={rule.status} />
             <CheckBadges deterministic={rule.has_deterministic} jev={rule.has_jev} />
+            {rule.created_by === 'agent' && (
+              <span className="rounded bg-violet-100 px-1.5 text-[11px] text-violet-800" data-testid="agent-badge">
+                proposed by agent
+              </span>
+            )}
             <span>
               v{rule.current_version}
               {rule.live_version && rule.live_version !== rule.current_version && ` (live: v${rule.live_version})`}
