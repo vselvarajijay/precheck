@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,6 +20,11 @@ class Settings(BaseSettings):
 
     typesafe_api_key: SecretStr | None = None
     jev_base_url: str = "https://api.typesafe.ai"
+    # live: call Jev; record: call + save fixtures; replay: fixtures only (tests/CI).
+    jev_mode: Literal["live", "record", "replay"] = "live"
+    jev_fixtures_dir: Path = REPO_ROOT / "backend" / "tests" / "fixtures" / "jev"
+    jev_deadline_s: float = 5.0
+    jev_default_model: str = "jev-latest"
     anthropic_api_key: SecretStr | None = None
     db_path: Path = REPO_ROOT / "data" / "app.db"
     # 0.0.0.0 inside containers; safety comes from publishing ports on 127.0.0.1 only.
