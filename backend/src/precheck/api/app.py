@@ -9,7 +9,9 @@ from pydantic import BaseModel
 from precheck import __version__
 from precheck.api import playground, policy, problems, rules, testing, tests, translate, validate
 from precheck.api.deps import SettingsDep
+from precheck.authoring.seed import seed_demo
 from precheck.config import get_settings
+from precheck.db.engine import engine_for, session_factory, session_scope
 from precheck.jev import make_jev_client
 from precheck.translator.llm import make_claude_client
 
@@ -31,6 +33,10 @@ def create_app() -> FastAPI:
             owned = app.state.jev = make_jev_client(get_settings())
         if getattr(app.state, "llm", None) is None:
             app.state.llm = make_claude_client(get_settings())
+        settings = get_settings()
+        if settings.seed_demo:
+            with session_scope(session_factory(engine_for(str(settings.db_path)))) as s:
+                seed_demo(s, settings.examples_dir)
         yield
         if owned is not None:
             await owned.aclose()

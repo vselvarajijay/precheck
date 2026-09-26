@@ -5,6 +5,7 @@ Fixtures hold only the request (for review) and the response JSON; never headers
 
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,9 @@ class FixtureStore:
         path = self.path_for(wire)
         if not path.exists():
             raise JevFixtureMissing(request_hash(wire), str(path))
+        if log := os.environ.get("JEV_FIXTURE_LOG"):  # opt-in: find unused fixtures
+            with open(log, "a", encoding="utf-8") as f:
+                f.write(path.name + "\n")
         data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
         return data["response"]  # type: ignore[no-any-return]
 

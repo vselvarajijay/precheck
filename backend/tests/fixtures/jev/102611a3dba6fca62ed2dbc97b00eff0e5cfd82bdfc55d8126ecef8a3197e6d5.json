@@ -1,6 +1,6 @@
 {
   "request": {
-    "model": "jev-latest",
+    "model": "jev-1.13.0",
     "questions": {
       "refund-different-payment-method__different_method": {
         "criteria": {

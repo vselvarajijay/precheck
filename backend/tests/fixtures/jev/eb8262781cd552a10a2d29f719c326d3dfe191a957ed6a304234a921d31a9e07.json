@@ -1,6 +1,6 @@
 {
   "request": {
-    "model": "jev-latest",
+    "model": "jev-1.13.0",
     "questions": {
       "refund-different-payment-method__different_method": {
         "criteria": {
@@ -17,13 +17,13 @@
           "args": {
             "order_id": "1234"
           },
-          "result_summary": "Order #1234, $100.00, paid with Visa ending 4242, return received",
+          "result_summary": "Order #1234, $120.00, paid with Visa ending 4242",
           "tool": "lookup_order"
         }
       ],
       "request": {
         "args": {
-          "amount": 100,
+          "amount": 120,
           "destination": "Visa ending 4242",
           "order_id": "1234"
         },
@@ -41,7 +41,7 @@
     },
     "model": "jev-1.13.0",
     "usage": {
-      "input_tokens": 453,
+      "input_tokens": 450,
       "output_tokens": 28
     }
   }

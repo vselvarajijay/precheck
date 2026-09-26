@@ -10,8 +10,8 @@ def test_reset_clears_everything(make_client, monkeypatch) -> None:
     get_settings.cache_clear()
     try:
         c = make_client(enable_test_reset=True)
-        c.post("/api/examples/packs/demo/load")
-        assert len(c.get("/api/rules").json()) == 4
+        created = c.post("/api/examples/packs/demo/load").json()["created"]
+        assert len(c.get("/api/rules").json()) == len(created) > 0
         assert c.post("/api/testing/reset").status_code == 204
         assert c.get("/api/rules?status=all").json() == []
     finally:
