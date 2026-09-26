@@ -1,7 +1,7 @@
 # Everything runs in containers; the host needs only Docker + .env.
 COMPOSE ?= docker compose
-RUN_API  = $(COMPOSE) --profile test run --rm --no-deps api-test
-RUN_WEB  = $(COMPOSE) --profile test run --rm --no-deps web-test
+RUN_API  = $(COMPOSE) --profile test run --rm --no-deps --build api-test
+RUN_WEB  = $(COMPOSE) --profile test run --rm --no-deps --build web-test
 ARGS ?=
 
 .PHONY: up dev down logs build ps test test-backend test-frontend test-live pytest lint typecheck \
@@ -55,8 +55,10 @@ gen-types:     ## Backend OpenAPI -> frontend/src/api/schema.d.ts
 	$(RUN_WEB) pnpm gen-types
 	rm -f frontend/src/api/openapi.json
 
-e2e:           ## Playwright against the running stack (starts it if needed)
-	$(COMPOSE) --profile e2e run --rm e2e
+e2e:           ## Playwright against an isolated stack (fresh DB, Jev replay); ARGS passed to playwright
+	$(COMPOSE) --profile e2e rm -sf api-e2e web-e2e >/dev/null 2>&1 || true
+	$(COMPOSE) --profile e2e run --rm --build e2e pnpm exec playwright test $(ARGS); \
+	  status=$$?; $(COMPOSE) --profile e2e rm -sf api-e2e web-e2e >/dev/null 2>&1; exit $$status
 
 sh-api:
 	$(COMPOSE) exec api sh
