@@ -1,0 +1,6 @@
+# Agent profiles the enforcement proxy attaches to check requests (id -> purpose).
+agents:
+  support-bot:
+    purpose: Handles customer support for orders, refunds and customer accounts
+  research-bot:
+    purpose: Answers product questions by reading public web pages; never changes customer data

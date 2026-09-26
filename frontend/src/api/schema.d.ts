@@ -155,6 +155,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lab/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Decisions */
+        get: operations["get_decisions_api_lab_decisions_get"];
+        put?: never;
+        /**
+         * Post Decisions
+         * @description Batch of decision events from an adapter (idempotent per event id).
+         */
+        post: operations["post_decisions_api_lab_decisions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/escalations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Escalations */
+        get: operations["get_escalations_api_lab_escalations_get"];
+        put?: never;
+        /** Post Escalation */
+        post: operations["post_escalation_api_lab_escalations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/escalations/{escalation_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Act On Escalation
+         * @description approve/deny a pending escalation (human); consume an approved one (adapter, once).
+         */
+        post: operations["act_on_escalation_api_lab_escalations__escalation_id___action__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/live-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Live Policy */
+        get: operations["get_live_policy_api_lab_live_policy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/playground/runs": {
         parameters: {
             query?: never;
@@ -863,6 +939,41 @@ export interface components {
             verdict: components["schemas"]["Verdict"];
             versions: components["schemas"]["DecisionVersions"];
         };
+        /** DecisionEvent */
+        DecisionEvent: {
+            /** @description Omitted when redacted */
+            check_request?: components["schemas"]["CheckRequest"] | null;
+            /** Created At */
+            created_at?: string | null;
+            decision?: components["schemas"]["Decision"] | null;
+            /** Escalation Id */
+            escalation_id?: string | null;
+            /**
+             * Forwarded
+             * @description Whether the call/result was passed on
+             */
+            forwarded: boolean;
+            gate: components["schemas"]["Gate"];
+            /** Id */
+            id: string;
+            /**
+             * Latency Ms
+             * @default 0
+             */
+            latency_ms: number;
+            /**
+             * Note
+             * @description e.g. 'escalation grant used', 'no policy loaded'
+             */
+            note?: string | null;
+            /** Session */
+            session: string;
+            /** Step */
+            step: number;
+            /** Tool */
+            tool?: string | null;
+            verdict: components["schemas"]["Verdict"];
+        };
         /** DecisionVersions */
         DecisionVersions: {
             /** Engine */
@@ -903,6 +1014,45 @@ export interface components {
             op: "domain_in" | "domain_not_in";
             /** Path */
             path: string;
+        };
+        /** Escalation */
+        Escalation: {
+            /** Args Hash */
+            args_hash: string;
+            check_request?: components["schemas"]["CheckRequest"] | null;
+            /** Created At */
+            created_at?: string | null;
+            decision?: components["schemas"]["Decision"] | null;
+            /** Extra */
+            extra?: {
+                [key: string]: unknown;
+            };
+            /** Id */
+            id: string;
+            /** Resolved At */
+            resolved_at?: string | null;
+            /** Session */
+            session: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "denied" | "consumed";
+            /** Tool */
+            tool: string;
+        };
+        /** EscalationCreate */
+        EscalationCreate: {
+            /** Args Hash */
+            args_hash: string;
+            check_request?: components["schemas"]["CheckRequest"] | null;
+            decision?: components["schemas"]["Decision"] | null;
+            /** Id */
+            id: string;
+            /** Session */
+            session: string;
+            /** Tool */
+            tool: string;
         };
         /** EvaluateRequest */
         EvaluateRequest: {
@@ -1096,6 +1246,21 @@ export interface components {
              */
             output_tokens: number;
         };
+        /**
+         * LivePolicy
+         * @description What enforcement runs: live rules at their published versions.
+         */
+        LivePolicy: {
+            /** Content Hash */
+            content_hash?: string | null;
+            /**
+             * Policy Version
+             * @description Active policy snapshot, if any
+             */
+            policy_version: number | null;
+            /** Rules */
+            rules: components["schemas"]["PolicyRule"][];
+        };
         /** MinLenPredicate */
         MinLenPredicate: {
             /**
@@ -1196,6 +1361,17 @@ export interface components {
             expected: components["schemas"]["Verdict"];
             /** Value */
             value: number;
+        };
+        /** PolicyRule */
+        PolicyRule: {
+            body: components["schemas"]["RuleBody"];
+            gate: components["schemas"]["Gate"];
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Version */
+            version: number;
         };
         /** PolicyRuleRef */
         PolicyRuleRef: {
@@ -2498,6 +2674,303 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UpgradeReport"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_decisions_api_lab_decisions_get: {
+        parameters: {
+            query?: {
+                session?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionEvent"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_decisions_api_lab_decisions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionEvent"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_escalations_api_lab_escalations_get: {
+        parameters: {
+            query?: {
+                status?: ("pending" | "approved" | "denied" | "consumed") | null;
+                ids?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Escalation"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_escalation_api_lab_escalations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EscalationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Escalation"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    act_on_escalation_api_lab_escalations__escalation_id___action__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                escalation_id: string;
+                action: "approve" | "deny" | "consume";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Escalation"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_live_policy_api_lab_live_policy_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LivePolicy"];
                 };
             };
             /** @description Not found */

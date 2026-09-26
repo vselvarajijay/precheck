@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     examples_dir: Path = REPO_ROOT / "backend" / "examples"
     # Seed backend/examples/rulepacks/demo.yaml as live rules on API start (idempotent).
     seed_demo: bool = False
+    # Enforcement MCP proxy (data plane).
+    api_url: str = "http://127.0.0.1:8000"
+    proxy_upstream_url: str = "http://127.0.0.1:8100/mcp"
+    proxy_refresh_s: float = 5.0
+    proxy_agents_file: Path = REPO_ROOT / "backend" / "examples" / "agents.yaml"
+    proxy_default_agent: str = "support-bot"
+    proxy_inject_reason: bool = True
+    proxy_log_check_requests: bool = True  # lab default; set false to log decisions only
     # Only the isolated e2e stack sets this: exposes POST /api/testing/reset.
     enable_test_reset: bool = False
     db_path: Path = REPO_ROOT / "data" / "app.db"

@@ -150,3 +150,38 @@ class PolicyVersionRow(Base):
     content_hash: Mapped[str] = mapped_column(String(80))
     note: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
+
+
+class LabDecisionRow(Base):
+    """One enforcement decision made by a data-plane adapter (e.g. the MCP proxy)."""
+
+    __tablename__ = "lab_decisions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    session: Mapped[str] = mapped_column(String(128), index=True)
+    step: Mapped[int] = mapped_column(Integer)
+    gate: Mapped[str] = mapped_column(String(16))
+    tool: Mapped[str | None] = mapped_column(String(128))
+    verdict: Mapped[str] = mapped_column(String(16))
+    forwarded: Mapped[bool] = mapped_column(Boolean)
+    escalation_id: Mapped[str | None] = mapped_column(String(36))
+    check_request_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    decision_json: Mapped[dict[str, Any]] = mapped_column(JSON)
+    latency_ms: Mapped[float] = mapped_column(Float, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow, index=True)
+
+
+class EscalationRow(Base):
+    """A held action waiting for a human: pending -> approved | denied (-> consumed)."""
+
+    __tablename__ = "escalations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    session: Mapped[str] = mapped_column(String(128), index=True)
+    tool: Mapped[str] = mapped_column(String(128))
+    args_hash: Mapped[str] = mapped_column(String(80))
+    status: Mapped[str] = mapped_column(String(16), index=True)  # pending|approved|denied|consumed
+    check_request_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    decision_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow, index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column()

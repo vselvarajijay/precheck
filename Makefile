@@ -5,7 +5,7 @@ RUN_WEB  = $(COMPOSE) --profile test run --rm --no-deps --build web-test
 ARGS ?=
 
 .PHONY: up dev down logs build ps test test-backend test-frontend test-live pytest lint typecheck \
-        fmt gen-types e2e e2e-live e2e-live-llm e2e-record eval-translator translator-roundtrip sh-api sh-web
+        fmt gen-types e2e e2e-live e2e-live-llm e2e-record eval-translator translator-roundtrip bench-proxy sh-api sh-web
 
 up:            ## Start the stack in the background
 	$(COMPOSE) up -d --build --wait
@@ -75,6 +75,10 @@ eval-translator: ## Score the translator on the eval corpus (live Claude; LLM_MO
 
 translator-roundtrip: ## Translate with tests, then run the generated tests through the engine (live Jev)
 	$(COMPOSE) run --rm --no-deps --entrypoint "" -e LLM_MODE=$${LLM_MODE:-cache} api python -m precheck.translator.roundtrip $(ARGS)
+
+bench-proxy:   ## Proxy overhead vs direct tool calls (needs `make up`); ARGS='--jev' adds a Jev-judged call
+	$(COMPOSE) run --rm --no-deps --entrypoint "" api python -m precheck.enforcement.bench \
+	  --tools http://tools:8100/mcp --proxy http://proxy:8200/mcp $(ARGS)
 
 sh-api:
 	$(COMPOSE) exec api sh
