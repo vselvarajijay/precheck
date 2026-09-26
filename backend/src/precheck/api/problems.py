@@ -45,7 +45,7 @@ def install(app: FastAPI) -> None:
     @app.exception_handler(ServiceError)
     async def _service(_: Request, exc: ServiceError) -> JSONResponse:
         errors = None
-        if isinstance(exc, LiveValidationError):
+        if isinstance(exc, LiveValidationError) and exc.problems:
             errors = [FieldError(field=p.field, message=p.message) for p in exc.problems]
         return problem(exc.status, exc.title, str(exc), errors)
 

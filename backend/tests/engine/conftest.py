@@ -12,6 +12,8 @@ class FakeJev:
 
     answers: dict[str, dict[str, Any]] = field(default_factory=dict)
     fail_with: Exception | None = None
+    # Optional per-model answers (for Jev upgrade checks); falls back to `answers`.
+    by_model: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
     calls: list[dict[str, Any]] = field(default_factory=list)
     model: str = "jev-1.13.0"
 
@@ -21,16 +23,20 @@ class FakeJev:
         self.calls.append({"state": state, "questions": dict(questions), "model": model})
         if self.fail_with is not None:
             raise self.fail_with
+        answers = self.by_model.get(model, self.answers)
         out = {}
         for nid in questions:
-            key = nid if nid in self.answers else nid.split("__", 1)[1]
-            if key in self.answers:
-                out[nid] = self.answers[key]
+            key = nid if nid in answers else nid.split("__", 1)[1]
+            if key in answers:
+                out[nid] = answers[key]
         return JevResponse(
-            resolved_model=self.model,
+            resolved_model=model if model in self.by_model else self.model,
             answers=out,
             usage=JevUsage(input_tokens=100 * len(questions), output_tokens=1),
         )
+
+    async def resolve_model(self, model: str = "jev-latest") -> str:
+        return self.model
 
 
 def noul(p: float) -> dict[str, Any]:

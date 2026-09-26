@@ -68,6 +68,15 @@ class TestCaseSpec(_Model):
     origin: Literal["user", "generated", "playground"] = "user"
 
 
+class SpecProvenance(_Model):
+    """Where an exported rule version came from (informational; ignored on import)."""
+
+    content_hash: str | None = None
+    jev_model: str | None = None
+    translator_model: str | None = None
+    prompt_version: str | None = None
+
+
 class RuleSpec(_Model):
     """A rule as authored in YAML/JSON (rule packs, import/export)."""
 
@@ -78,6 +87,10 @@ class RuleSpec(_Model):
     explanation: str | None = None
     body: RuleBody
     tests: list[TestCaseSpec] = Field(default_factory=list)
+    version: int | None = Field(
+        default=None, description="Exported live version (ignored on import)"
+    )
+    provenance: SpecProvenance | None = None
 
 
 class RulePack(_Model):

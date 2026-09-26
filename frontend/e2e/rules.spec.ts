@@ -1,6 +1,7 @@
 import { expect, expectNoSeriousA11yViolations, test } from './fixtures'
 
-test('create -> edit -> v2 diff -> live blocked on jev-latest -> pin -> live', async ({ page, consoleErrors }) => {
+test('create -> edit -> v2 diff -> publish pins jev-latest -> live', async ({ page, consoleErrors }) => {
+  void consoleErrors
   const name = `Refund different method ${Date.now()}`
 
   await page.goto('/rules/new')
@@ -29,20 +30,16 @@ test('create -> edit -> v2 diff -> live blocked on jev-latest -> pin -> live', a
   await expect(diff.locator('[data-diff="removed"]')).toContainText('different payment method?')
   await expect(diff.locator('[data-diff="added"]')).toContainText('different card than the original purchase?')
 
-  // Live fails while unpinned (the browser logs the deliberate 422)
-  consoleErrors.expect(/status of 422/)
-  await page.getByRole('button', { name: 'Set live' }).click()
-  await expect(page.getByText('Rule cannot be published')).toBeVisible()
-  await expect(page.getByText(/must pin a Jev version/).first()).toBeVisible()
-
-  // Pin -> v3 -> live
-  await page.getByRole('tab', { name: 'Definition' }).click()
-  await page.getByLabel('Jev model').fill('jev-1.13.0')
-  await expect(page.getByTestId('validation-summary')).toContainText('publishable')
-  await page.getByRole('button', { name: 'Save new version' }).click()
-  await expect(page.getByText('Saved as v3')).toBeVisible()
-  await page.getByRole('button', { name: 'Set live' }).click()
-  await expect(page.getByText('Published v3')).toBeVisible()
+  // Publish pins jev-latest to the concrete version (a new version) and sets it live.
+  await page.getByRole('button', { name: 'Publish…' }).click()
+  await expect(page.getByTestId('publish-preview')).toContainText('will be pinned')
+  await expect(page.getByRole('dialog').getByTestId('version-diff')).toHaveCount(0) // not live yet: nothing to diff
+  await page.getByRole('button', { name: 'Publish v2' }).click()
+  const result = page.getByTestId('publish-result')
+  await expect(result).toContainText('pinned jev-latest → jev-1.13.0')
+  await expect(result).toContainText('Live: v3')
+  await expect(result).toContainText('no test cases')
+  await page.getByRole('button', { name: 'Done' }).click()
   await expect(page.getByText('● live')).toBeVisible()
 
   // Listed as live

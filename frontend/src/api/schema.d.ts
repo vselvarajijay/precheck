@@ -78,6 +78,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export
+         * @description All live rules (live versions, golden sets, provenance) as a RulePack YAML file.
+         */
+        get: operations["export_api_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -95,6 +115,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Rules
+         * @description Validate a RulePack and create its rules as drafts (never live) with their tests.
+         */
+        post: operations["import_rules_api_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jev/upgrade-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Jev Upgrade Check
+         * @description Compare live rules' golden sets on their pinned Jev model vs `target_model`.
+         */
+        post: operations["jev_upgrade_check_api_jev_upgrade_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/playground/runs": {
         parameters: {
             query?: never;
@@ -106,6 +166,46 @@ export interface paths {
         get: operations["playground_runs_api_playground_runs_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/policy-versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Policy Versions
+         * @description Newest first; the first is active.
+         */
+        get: operations["policy_versions_api_policy_versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/policy-versions/{version}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate
+         * @description Roll back (or forward): make exactly that snapshot's rule versions live.
+         */
+        post: operations["activate_api_policy_versions__version__activate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -196,6 +296,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rules/{rule_id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Diff
+         * @description Live vs current (draft) version, with the latest test run for each.
+         */
+        get: operations["diff_api_rules__rule_id__diff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rules/{rule_id}/generate-tests": {
         parameters: {
             query?: never;
@@ -210,6 +330,27 @@ export interface paths {
          * @description Ask the translator for more test cases for this rule (saved, origin=generated).
          */
         post: operations["generate_tests_api_rules__rule_id__generate_tests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rules/{rule_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish
+         * @description Pin jev-latest to the concrete version, run the golden set on it (failures warn), set
+         *     live and snapshot the policy.
+         */
+        post: operations["publish_api_rules__rule_id__publish_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -875,6 +1016,28 @@ export interface components {
             /** Tool */
             tool: string;
         };
+        /** ImportRequest */
+        ImportRequest: {
+            /**
+             * Yaml
+             * @description A RulePack YAML (or JSON) document
+             */
+            yaml: string;
+        };
+        /** ImportResult */
+        ImportResult: {
+            /** Created */
+            created: string[];
+            /**
+             * Renamed
+             * @description requested id -> created id
+             */
+            renamed?: {
+                [key: string]: string;
+            };
+            /** Tests Created */
+            tests_created: number;
+        };
         /** JevCheck */
         JevCheck: {
             /**
@@ -1034,6 +1197,36 @@ export interface components {
             /** Value */
             value: number;
         };
+        /** PolicyRuleRef */
+        PolicyRuleRef: {
+            /** Content Hash */
+            content_hash: string;
+            /** Rule Id */
+            rule_id: string;
+            /** Version */
+            version: number;
+        };
+        /** PolicyVersion */
+        PolicyVersion: {
+            /**
+             * Active
+             * @default false
+             */
+            active: boolean;
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Note */
+            note: string | null;
+            /** Rules */
+            rules: components["schemas"]["PolicyRuleRef"][];
+            /** Version */
+            version: number;
+        };
         /** Problem */
         Problem: {
             /** Detail */
@@ -1049,6 +1242,18 @@ export interface components {
              * @default about:blank
              */
             type: string;
+        };
+        /** PublishResult */
+        PublishResult: {
+            /** Pinned From */
+            pinned_from?: string | null;
+            /** Pinned To */
+            pinned_to?: string | null;
+            policy_version: components["schemas"]["PolicyVersion"];
+            rule: components["schemas"]["RuleDetail"];
+            test_run?: components["schemas"]["TestRun"] | null;
+            /** Warnings */
+            warnings?: string[];
         };
         /** QuestionCalibration */
         QuestionCalibration: {
@@ -1284,6 +1489,19 @@ export interface components {
             /** Versions */
             versions: components["schemas"]["VersionSummary"][];
         };
+        /** RuleDiff */
+        RuleDiff: {
+            /** Changed */
+            changed: boolean;
+            /** Draft */
+            draft: unknown;
+            draft_run: components["schemas"]["TestRun"] | null;
+            /** Live */
+            live: unknown | null;
+            live_run: components["schemas"]["TestRun"] | null;
+            /** Rule Id */
+            rule_id: string;
+        };
         /** RuleInfo */
         RuleInfo: {
             body: components["schemas"]["RuleBody"];
@@ -1343,10 +1561,16 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+            provenance?: components["schemas"]["SpecProvenance"] | null;
             /** Source Text */
             source_text?: string | null;
             /** Tests */
             tests?: components["schemas"]["TestCaseSpec"][];
+            /**
+             * Version
+             * @description Exported live version (ignored on import)
+             */
+            version?: number | null;
         };
         /** RuleStatusChange */
         RuleStatusChange: {
@@ -1583,6 +1807,20 @@ export interface components {
          * @enum {string}
          */
         Severity: "low" | "medium" | "high";
+        /**
+         * SpecProvenance
+         * @description Where an exported rule version came from (informational; ignored on import).
+         */
+        SpecProvenance: {
+            /** Content Hash */
+            content_hash?: string | null;
+            /** Jev Model */
+            jev_model?: string | null;
+            /** Prompt Version */
+            prompt_version?: string | null;
+            /** Translator Model */
+            translator_model?: string | null;
+        };
         /** Suggestion */
         Suggestion: {
             bands: components["schemas"]["Bands"];
@@ -1829,6 +2067,42 @@ export interface components {
             message: string;
             /** Rule Id */
             rule_id: string | null;
+        };
+        /** UpgradeCheckRequest */
+        UpgradeCheckRequest: {
+            /** Target Model */
+            target_model: string;
+        };
+        /** UpgradeDiff */
+        UpgradeDiff: {
+            current: components["schemas"]["Verdict"];
+            /** Current Values */
+            current_values: number[];
+            expected: components["schemas"]["Verdict"];
+            /** Rule Id */
+            rule_id: string;
+            target: components["schemas"]["Verdict"];
+            /** Target Values */
+            target_values: number[];
+            /** Test Case */
+            test_case: string;
+        };
+        /** UpgradeReport */
+        UpgradeReport: {
+            /** Cases Checked */
+            cases_checked: number;
+            /** Current Pass */
+            current_pass: number;
+            /** Diffs */
+            diffs: components["schemas"]["UpgradeDiff"][];
+            /** Jev Tokens */
+            jev_tokens: number;
+            /** Rules Checked */
+            rules_checked: number;
+            /** Target Model */
+            target_model: string;
+            /** Target Pass */
+            target_pass: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -2085,6 +2359,54 @@ export interface operations {
             };
         };
     };
+    export_api_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description RulePack YAML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/yaml": unknown;
+                    "text/plain": string;
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     health_api_health_get: {
         parameters: {
             query?: never;
@@ -2101,6 +2423,108 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    import_rules_api_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    jev_upgrade_check_api_jev_upgrade_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpgradeCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpgradeReport"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -2123,6 +2547,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlaygroundRun"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    policy_versions_api_policy_versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyVersion"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    activate_api_policy_versions__version__activate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyVersion"];
                 };
             };
             /** @description Not found */
@@ -2512,6 +3032,55 @@ export interface operations {
             };
         };
     };
+    diff_api_rules__rule_id__diff_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleDiff"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     generate_tests_api_rules__rule_id__generate_tests_post: {
         parameters: {
             query?: never;
@@ -2530,6 +3099,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GenerateTestsResult"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    publish_api_rules__rule_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishResult"];
                 };
             };
             /** @description Not found */

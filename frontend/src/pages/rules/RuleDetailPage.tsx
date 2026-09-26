@@ -6,6 +6,7 @@ import { ApiError, errorsByPath } from '@/api/problem'
 import { useRule, useRuleVersion, useSetRuleStatus, useUpdateRule } from '@/api/rules'
 import type { RuleBody, RuleDetail, RuleStatus } from '@/api/types'
 import { CheckBadges, GateBadge, StatusBadge } from '@/components/rules/badges'
+import { PublishDialog } from '@/components/rules/PublishDialog'
 import { RuleBodyEditor, type ValidationState } from '@/components/rules/RuleBodyEditor'
 import { RuleTestsPanel } from '@/components/tests/RuleTestsPanel'
 import { VersionDiff } from '@/components/rules/VersionDiff'
@@ -86,11 +87,11 @@ function StatusActions({ rule }: { rule: RuleDetail }) {
   const livePending = rule.status === 'live' && rule.live_version !== rule.current_version
   return (
     <div className="flex flex-wrap gap-2">
-      {(rule.status === 'draft' || livePending) && (
-        <Button disabled={busy} onClick={() => run('live', `Published v${rule.current_version}`)}>
-          {livePending ? `Publish v${rule.current_version}` : 'Set live'}
-        </Button>
-      )}
+      <PublishDialog
+        rule={rule}
+        canPublish={rule.status === 'draft' || livePending}
+        label={livePending ? `Publish v${rule.current_version}` : 'Publish…'}
+      />
       {rule.status === 'live' && (
         <Button variant="outline" disabled={busy} onClick={() => run('draft', 'Moved back to draft')}>
           Unpublish
