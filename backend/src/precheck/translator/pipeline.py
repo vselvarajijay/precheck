@@ -7,6 +7,7 @@ validate, repair (feed errors back, at most 2 rounds), enforce routing/quality l
 
 import hashlib
 import json
+from collections.abc import Awaitable, Callable
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -16,7 +17,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from precheck import __version__
 from precheck.schema import Gate, RuleSpec, TestCaseSpec
-from precheck.translator.convert import convert_rule, convert_test
+from precheck.translator.convert import NotRepresentable, convert_rule, convert_test, spec_to_draft
 from precheck.translator.draft import Clarification, PlanDraft, Requirement, RulesDraft, TestsDraft
 from precheck.translator.lints import ExistingRule, TranslationWarning, lint_routing, lint_rule
 from precheck.translator.llm import JsonLLM, LLMUsage
@@ -145,6 +146,27 @@ def repair_message(errors: list[str]) -> str:
     )
 
 
+Progress = Callable[[str], Awaitable[None]]
+
+
+class RefineResult(BaseModel):
+    rule: TranslatedRule | None = None
+    errors: list[str] = Field(default_factory=list)
+    repair_rounds: int = 0
+    provenance: Provenance
+    usage: LLMUsage = Field(default_factory=LLMUsage)
+    cost_usd: float = 0.0
+
+
+def refine_message(spec: RuleSpec, instruction: str) -> str:
+    return (
+        f"Rule to refine (JSON):\n{json.dumps(spec_to_draft(spec))}\n\n"
+        f"Change requested by the author:\n{instruction.strip()}\n\n"
+        "Return the refined rule as the only item of `rules`. Keep its id and source_text; "
+        "change only what the request needs, and update the explanation to match."
+    )
+
+
 class Translator:
     def __init__(
         self,
@@ -152,13 +174,61 @@ class Translator:
         *,
         existing: list[ExistingRule] | None = None,
         generate_tests: bool = True,
+        progress: Progress | None = None,
     ) -> None:
         self.llm = llm
         self.existing = existing or []
         self.generate_tests = generate_tests
+        self.progress = progress
         self.usage = LLMUsage()
 
+    async def _emit(self, stage: str) -> None:
+        if self.progress is not None:
+            await self.progress(stage)
+
+    async def refine(self, spec: RuleSpec, instruction: str) -> RefineResult:
+        """One rule + a plain-language change request -> the refined rule (rules step)."""
+        self.usage = LLMUsage()
+        _, prompt_version = load_prompt()
+        result = RefineResult(
+            provenance=Provenance(translator_model=self.llm.model, prompt_version=prompt_version)
+        )
+        try:
+            messages: list[dict[str, Any]] = [
+                {"role": "user", "content": refine_message(spec, instruction)}
+            ]
+        except NotRepresentable as e:
+            result.errors = [str(e)]
+            return result
+        try:
+            rounds = 0
+            while True:
+                text = await self._step("rules", messages)
+                specs, errors = self._convert_rules(text)
+                if len(specs) != 1:
+                    errors.append(f"expected exactly one refined rule, got {len(specs)}")
+                if not errors or rounds >= MAX_REPAIR_ROUNDS:
+                    break
+                rounds += 1
+                messages = [
+                    *messages,
+                    {"role": "assistant", "content": text},
+                    {"role": "user", "content": repair_message(errors)},
+                ]
+            result.repair_rounds = rounds
+            result.errors = errors
+            if specs:
+                refined = specs[0]
+                result.rule = TranslatedRule(
+                    spec=refined, warnings=lint_rule(refined, self.existing)
+                )
+        finally:
+            result.usage = self.usage
+            result.cost_usd = round(self.usage.cost_usd(self.llm.model), 6)
+        return result
+
     async def _step(self, step: str, messages: list[dict[str, Any]]) -> str:
+        await self._emit(step)
         system, _ = load_prompt()
         resp = await self.llm.complete_json(
             system=system, messages=messages, schema=schema_for(step)
@@ -199,10 +269,12 @@ class Translator:
         rounds = 0
         while True:
             text = await self._step("rules", messages)
+            await self._emit("validating")
             specs, errors = self._convert_rules(text)
             if not errors or rounds >= MAX_REPAIR_ROUNDS:
                 break
             rounds += 1
+            await self._emit("repairing")
             messages = [
                 *messages,
                 {"role": "assistant", "content": text},

@@ -180,3 +180,100 @@ def convert_test(
         ), []
     except ValidationError as e:
         return None, _errors(prefix, e)
+
+
+# --- inverse: RuleSpec -> RuleDraft (for refine prompts) ------------------------------
+
+
+class NotRepresentable(ValueError):
+    """The rule uses structure the flat draft format can't express (e.g. nested groups)."""
+
+
+def _condition(p: Any) -> dict[str, Any]:
+    d = p.model_dump(mode="json")
+    op = d["op"]
+    if op in ("all", "any", "not"):
+        raise NotRepresentable("nested condition groups can't be refined; edit the rule directly")
+    value = d.get("value")
+    return {
+        "path": d["path"],
+        "op": op,
+        "value_text": d.get("pattern")
+        if op == "regex"
+        else (value if isinstance(value, str) else None),
+        "value_number": value
+        if isinstance(value, int | float) and not isinstance(value, bool)
+        else None,
+        "values": [str(v) for v in d.get("values", [])],
+        "domains": d.get("domains", []),
+    }
+
+
+def spec_to_draft(spec: RuleSpec) -> dict[str, Any]:
+    """RuleSpec -> the flat RuleDraft dict the LLM writes (raises NotRepresentable)."""
+    from precheck.schema.predicate import AllPredicate, AnyPredicate, NotPredicate, selector_tools
+
+    body = spec.body
+    tools = selector_tools(body.applies_when)
+    if body.applies_when is not None and not tools:
+        raise NotRepresentable("only request.tool selectors can be refined; edit the rule directly")
+    deterministic = None
+    if body.deterministic:
+        pred: Any = body.deterministic.predicate
+        negate = isinstance(pred, NotPredicate)
+        if negate:
+            pred = pred.predicate
+        combine = "all"
+        if isinstance(pred, AllPredicate | AnyPredicate):
+            combine = pred.op
+            conditions = [_condition(c) for c in pred.predicates]
+        else:
+            conditions = [_condition(pred)]
+        deterministic = {
+            "combine": combine,
+            "negate": negate,
+            "conditions": conditions,
+            "verdict_when_true": body.deterministic.verdict_when_true.value,
+        }
+    jev = None
+    if body.jev:
+        questions = []
+        for qid, q in body.jev.questions.items():
+            o = body.jev.outcomes[qid].model_dump(mode="json")
+            qd = q.model_dump(mode="json", by_alias=True)
+            crit: Any = qd.get("criteria") or {}
+            questions.append(
+                {
+                    "id": qid,
+                    "type": q.type,
+                    "instructions": q.instructions,
+                    "criteria_true": crit.get("true") if q.type == "noul" and crit else None,
+                    "criteria_false": crit.get("false") if q.type == "noul" and crit else None,
+                    "bad_answer": "false" if o.get("direction") == "low_is_bad" else "true",
+                    "options": [
+                        {"name": k, "description": v, "verdict": o["map"][k]}
+                        for k, v in crit.items()
+                    ]
+                    if q.type == "choice"
+                    else [],
+                    "levels": crit if q.type == "score" else [],
+                    "escalate_at": o.get("bands", {}).get("escalate_at", 0.0),
+                    "deny_at": o.get("bands", {}).get("deny_at", 0.0),
+                    "min_confidence": o.get("min_confidence", 0.0),
+                }
+            )
+        jev = {"state_template": body.jev.state_template, "questions": questions}
+    return {
+        "id": spec.id,
+        "name": spec.name,
+        "gate": spec.gate.value,
+        "source_text": spec.source_text or "",
+        "explanation": spec.explanation or "",
+        "severity": body.severity.value,
+        "applies_to_tools": tools,
+        "requires": body.requires,
+        "on_missing": body.on_missing.value,
+        "deterministic": deterministic,
+        "jev": jev,
+        "on_error": body.on_error.value if body.on_error else None,
+    }
