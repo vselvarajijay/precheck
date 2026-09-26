@@ -1,0 +1,100 @@
+# Local stack. Ports are published on 127.0.0.1 only (no auth in the MVP).
+# Services bind 0.0.0.0 inside their containers. Other services are added by later slices:
+# authoring-mcp (11), tools (12), proxy (13), agent (14).
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+    target: dev
+  image: precheck-backend:dev
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    DB_PATH: /app/data/app.db
+    # Interpolated from the shell first, then .env, so `TYPESAFE_API_KEY= docker compose up` works.
+    TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  volumes:
+    - ./backend:/app/backend
+    - ./data:/app/data
+
+services:
+  api:
+    <<: *backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: dev
+    image: precheck-frontend:dev
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  # --- profile: test (unit + integration tests, no network) -------------------
+  api-test:
+    <<: *backend
+    profiles: ["test"]
+    network_mode: none
+    env_file: []
+    environment:
+      DB_PATH: /tmp/test.db
+      TYPESAFE_API_KEY: ""
+      ANTHROPIC_API_KEY: ""
+    entrypoint: []
+    command: ["pytest"]
+
+  web-test:
+    image: precheck-frontend:dev
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: dev
+    profiles: ["test"]
+    network_mode: none
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["pnpm", "test"]
+
+  # --- profile: e2e (Playwright against the running stack) --------------------
+  e2e:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: e2e
+    image: precheck-e2e:dev
+    profiles: ["e2e"]
+    environment:
+      E2E_BASE_URL: http://web:5173
+    volumes:
+      - ./frontend/e2e:/app/e2e
+      - ./frontend/playwright.config.ts:/app/playwright.config.ts
+      - ./frontend/test-results:/app/test-results
+    depends_on:
+      web:
+        condition: service_healthy

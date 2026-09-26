@@ -1,0 +1,27 @@
+# Local-only working context (not versioned)
+.project_context/
+
+# Local agent instructions
+CLAUDE.local.md
+
+# Local feature plans (not versioned)
+.features/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data (SQLite)
+data/
+
+# Tooling
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+frontend/test-results/
+frontend/playwright-report/
+frontend/src/api/openapi.json
