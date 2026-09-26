@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     proxy_default_agent: str = "support-bot"
     proxy_inject_reason: bool = True
     proxy_log_check_requests: bool = True  # lab default; set false to log decisions only
+    # Where the API reaches the test-agent service (Agent Lab relays runs through the API).
+    agent_url: str = "http://127.0.0.1:8300"
     # Test agent (lab): talks only to the proxy.
     agent_proxy_url: str = "http://127.0.0.1:8200/mcp"
     agent_tools_url: str = "http://127.0.0.1:8100"

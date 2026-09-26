@@ -28,6 +28,7 @@ services:
       TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       SEED_DEMO: ${SEED_DEMO:-true}
+      AGENT_URL: http://agent:8300
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:
@@ -170,6 +171,7 @@ services:
     environment:
       DB_PATH: /tmp/e2e/app.db
       ENABLE_TEST_RESET: "true"
+      AGENT_URL: http://agent-e2e:8300
       # replay by default; `make e2e-live` / `make e2e-record` switch mode and pass the key.
       JEV_MODE: ${E2E_JEV_MODE:-replay}
       JEV_FIXTURE_LOG: ${E2E_FIXTURE_LOG:-}
@@ -271,10 +273,14 @@ services:
     environment:
       E2E_BASE_URL: http://web-e2e:5173
       E2E_API_URL: http://api-e2e:8000
+      E2E_PROXY_URL: http://proxy-e2e:8200
+      E2E_TOOLS_URL: http://tools-e2e:8100
     volumes:
       - ./frontend/e2e:/app/e2e
       - ./frontend/playwright.config.ts:/app/playwright.config.ts
       - ./frontend/test-results:/app/test-results
     depends_on:
       web-e2e:
+        condition: service_healthy
+      agent-e2e:
         condition: service_healthy

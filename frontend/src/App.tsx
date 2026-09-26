@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, Navigate, RouterProvider, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { Toaster } from '@/components/ui/sonner'
+import { AgentLabPage } from '@/pages/AgentLabPage'
 import { PlaygroundPage } from '@/pages/PlaygroundPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { TestsPage } from '@/pages/TestsPage'
@@ -22,6 +23,7 @@ export const routes: RouteObject[] = [
       { path: 'rules/:ruleId', element: <RuleDetailPage /> },
       { path: 'playground', element: <PlaygroundPage /> },
       { path: 'tests', element: <TestsPage /> },
+      { path: 'lab', element: <AgentLabPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],
   },

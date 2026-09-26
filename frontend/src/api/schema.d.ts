@@ -251,6 +251,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lab/runs/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Run
+         * @description Start a scripted scenario or an LLM goal on the test agent.
+         */
+        post: operations["start_run_api_lab_runs_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lab/runs/{run_id}": {
         parameters: {
             query?: never;
@@ -272,6 +292,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lab/runs/{run_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Events
+         * @description Relay the agent's server-sent events for a run.
+         */
+        get: operations["events_api_lab_runs__run_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/runs/{run_id}/retry/{index}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry
+         * @description Repeat a step in the same agent session (e.g. after approving its escalation).
+         */
+        post: operations["retry_api_lab_runs__run_id__retry__index__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lab/runs/{run_id}/steps/{index}": {
         parameters: {
             query?: never;
@@ -282,6 +342,23 @@ export interface paths {
         get?: never;
         /** Put Step */
         put: operations["put_step_api_lab_runs__run_id__steps__index__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lab/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Scenarios */
+        get: operations["scenarios_api_lab_scenarios_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -2053,6 +2130,47 @@ export interface components {
             /** Requested Id */
             requested_id: string;
         };
+        /** Scenario */
+        Scenario: {
+            agent: components["schemas"]["ScenarioAgent"];
+            /** Description */
+            description: string;
+            /** Id */
+            id: string;
+            /** Steps */
+            steps: components["schemas"]["ScenarioStep"][];
+            /** Title */
+            title: string;
+            /** User Goal */
+            user_goal: string;
+        };
+        /** ScenarioAgent */
+        ScenarioAgent: {
+            /** Id */
+            id: string;
+            /** Purpose */
+            purpose: string;
+        };
+        /** ScenarioStep */
+        ScenarioStep: {
+            /** Args */
+            args?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Expect Reached Tool
+             * @description Whether the mock tool must receive the call
+             */
+            expect_reached_tool: boolean;
+            /** @description Verdict on the tool's result (ingress gate), if checked */
+            expected_result_verdict?: components["schemas"]["Verdict"] | null;
+            /** @description Verdict on the tool call (tool_call gate) */
+            expected_verdict: components["schemas"]["Verdict"];
+            /** Reason */
+            reason?: string | null;
+            /** Tool */
+            tool: string;
+        };
         /** ScoreAnswer */
         ScoreAnswer: {
             /** Confidence */
@@ -2135,6 +2253,27 @@ export interface components {
             prompt_version?: string | null;
             /** Translator Model */
             translator_model?: string | null;
+        };
+        /** StartRun */
+        StartRun: {
+            /** Agent Id */
+            agent_id?: string | null;
+            /** Goal */
+            goal?: string | null;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "scripted" | "llm";
+            /** Scenario Id */
+            scenario_id?: string | null;
+        };
+        /** Started */
+        Started: {
+            /** Id */
+            id: string;
+            /** Status */
+            status: string;
         };
         /** Suggestion */
         Suggestion: {
@@ -3191,6 +3330,57 @@ export interface operations {
             };
         };
     };
+    start_run_api_lab_runs_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartRun"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Started"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_lab_run_api_lab_runs__run_id__get: {
         parameters: {
             query?: never;
@@ -3291,6 +3481,105 @@ export interface operations {
             };
         };
     };
+    events_api_lab_runs__run_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    retry_api_lab_runs__run_id__retry__index__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunStep"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     put_step_api_lab_runs__run_id__steps__index__put: {
         parameters: {
             query?: never;
@@ -3313,6 +3602,53 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    scenarios_api_lab_scenarios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Scenario"][];
+                };
             };
             /** @description Not found */
             404: {
