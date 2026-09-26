@@ -29,7 +29,7 @@ from precheck.authoring.errors import (
 from precheck.db.models import RuleRow, RuleVersionRow, utcnow
 from precheck.db.repos import RuleRepo
 from precheck.schema import Gate, RuleBody, RuleVersion, content_hash
-from precheck.schema.predicate import AllPredicate, ComparePredicate, SetPredicate
+from precheck.schema.predicate import selector_tools
 from precheck.schema.rule import live_problem_details
 
 
@@ -51,21 +51,6 @@ def to_rule_version(row: RuleVersionRow) -> RuleVersion:
         content_hash=row.content_hash,
         created_at=row.created_at,
     )
-
-
-def applies_to_tools(body: RuleBody) -> list[str]:
-    """Tool names a simple `request.tool` selector names (for list views)."""
-
-    def walk(p: Any) -> list[str]:
-        if isinstance(p, ComparePredicate) and p.path == "request.tool" and p.op == "eq":
-            return [str(p.value)]
-        if isinstance(p, SetPredicate) and p.path == "request.tool" and p.op == "in":
-            return [str(v) for v in p.values]
-        if isinstance(p, AllPredicate):
-            return [t for c in p.predicates for t in walk(c)]
-        return []
-
-    return walk(body.applies_when) if body.applies_when else []
 
 
 class RuleService:
@@ -236,7 +221,7 @@ class RuleService:
             "has_jev": body.jev is not None,
             "jev_model": body.jev.model if body.jev else None,
             "requires": list(body.requires),
-            "applies_to_tools": applies_to_tools(body),
+            "applies_to_tools": selector_tools(body.applies_when),
             "updated_at": rule.updated_at,
         }
 
