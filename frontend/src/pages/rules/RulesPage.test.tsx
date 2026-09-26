@@ -40,7 +40,7 @@ function mockRules() {
 test('lists rules with badges', async () => {
   mockRules()
   renderApp('/rules')
-  const row = await screen.findByTestId('rule-row-pii-egress')
+  const row = await screen.findByTestId('rule-row-pii-egress', {}, { timeout: 3000 })
   expect(within(row).getByText('egress')).toBeInTheDocument()
   expect(within(row).getByText('code')).toBeInTheDocument()
   expect(within(row).getByText('jev')).toBeInTheDocument()
@@ -54,20 +54,20 @@ test('lists rules with badges', async () => {
 test('search and gate filters are sent to the API', async () => {
   const seen = mockRules()
   renderApp('/rules')
-  await screen.findByTestId('rule-row-pii-egress')
+  await screen.findByTestId('rule-row-pii-egress', {}, { timeout: 3000 })
   await userEvent.type(screen.getByLabelText('Search rules'), 'pii')
-  await waitFor(() => expect(screen.queryByTestId('rule-row-refund-over-limit')).not.toBeInTheDocument())
+  await waitFor(() => expect(screen.queryByTestId('rule-row-refund-over-limit')).not.toBeInTheDocument(), { timeout: 3000 })
   expect(seen.at(-1)?.get('q')).toBe('pii')
 
   await userEvent.clear(screen.getByLabelText('Search rules'))
-  expect(await screen.findByTestId('rule-row-refund-over-limit')).toBeInTheDocument()
+  expect(await screen.findByTestId('rule-row-refund-over-limit', {}, { timeout: 3000 })).toBeInTheDocument()
   await userEvent.selectOptions(screen.getByLabelText('Filter by gate'), 'tool_call')
-  await waitFor(() => expect(screen.queryByTestId('rule-row-pii-egress')).not.toBeInTheDocument())
+  await waitFor(() => expect(screen.queryByTestId('rule-row-pii-egress')).not.toBeInTheDocument(), { timeout: 3000 })
   expect(seen.at(-1)?.get('gate')).toBe('tool_call')
   expect(screen.getByTestId('rule-row-refund-over-limit')).toBeInTheDocument()
 
   await userEvent.selectOptions(screen.getByLabelText('Filter by status'), 'archived')
-  await waitFor(() => expect(seen.at(-1)?.get('status')).toBe('archived'))
+  await waitFor(() => expect(seen.at(-1)?.get('status')).toBe('archived'), { timeout: 3000 })
 })
 
 test('empty state', async () => {

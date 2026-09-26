@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     proxy_default_agent: str = "support-bot"
     proxy_inject_reason: bool = True
     proxy_log_check_requests: bool = True  # lab default; set false to log decisions only
+    # Test agent (lab): talks only to the proxy.
+    agent_proxy_url: str = "http://127.0.0.1:8200/mcp"
+    agent_tools_url: str = "http://127.0.0.1:8100"
+    agent_model: str = "claude-sonnet-5"
+    agent_max_turns: int = 8
     # Only the isolated e2e stack sets this: exposes POST /api/testing/reset.
     enable_test_reset: bool = False
     db_path: Path = REPO_ROOT / "data" / "app.db"

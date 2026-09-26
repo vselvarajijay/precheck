@@ -90,6 +90,28 @@ services:
       retries: 20
       start_period: 5s
 
+  agent:
+    <<: *backend
+    # Test agent (scripted scenarios + Claude LLM mode); talks only to the proxy.
+    command: ["uvicorn", "precheck.labagent.service:app", "--host", "0.0.0.0", "--port", "8300"]
+    entrypoint: []
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      API_URL: http://api:8000
+      AGENT_PROXY_URL: http://proxy:8200/mcp
+      AGENT_TOOLS_URL: http://tools:8100
+    ports:
+      - "127.0.0.1:8300:8300"
+    depends_on:
+      proxy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8300/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
   web:
     build:
       context: .
@@ -160,6 +182,60 @@ services:
     command: ["uvicorn", "precheck.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  tools-e2e:
+    <<: *backend
+    profiles: ["e2e"]
+    command: ["python", "-m", "precheck.labtools.server", "--port", "8100"]
+    entrypoint: []
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=3)"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  proxy-e2e:
+    <<: *backend
+    profiles: ["e2e"]
+    command: ["python", "-m", "precheck.enforcement.mcp_proxy", "--port", "8200"]
+    entrypoint: []
+    environment:
+      API_URL: http://api-e2e:8000
+      PROXY_UPSTREAM_URL: http://tools-e2e:8100/mcp
+      PROXY_REFRESH_S: "2"
+      JEV_MODE: ${E2E_JEV_MODE:-replay}
+      TYPESAFE_API_KEY: ${E2E_JEV_KEY:-}
+      JEV_FIXTURE_LOG: ${E2E_FIXTURE_LOG:-}
+    depends_on:
+      api-e2e:
+        condition: service_healthy
+      tools-e2e:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8200/health', timeout=3)"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  agent-e2e:
+    <<: *backend
+    profiles: ["e2e"]
+    command: ["uvicorn", "precheck.labagent.service:app", "--host", "0.0.0.0", "--port", "8300"]
+    entrypoint: []
+    environment:
+      API_URL: http://api-e2e:8000
+      AGENT_PROXY_URL: http://proxy-e2e:8200/mcp
+      AGENT_TOOLS_URL: http://tools-e2e:8100
+      LLM_MODE: ${E2E_LLM_MODE:-replay}
+      ANTHROPIC_API_KEY: ${E2E_LLM_KEY:-}
+    depends_on:
+      proxy-e2e:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8300/health', timeout=3)"]
       interval: 3s
       timeout: 5s
       retries: 30
