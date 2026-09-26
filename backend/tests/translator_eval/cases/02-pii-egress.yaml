@@ -1,0 +1,6 @@
+text: Never send customer emails, phone numbers or home addresses to any domain other than our own, example-shop.com.
+gate_hint: tool_call
+tools: [http_request, read_customer_profile]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+domains: [example-shop.com]
+expect: {rules: 1, jev: true, domain_predicate: true}

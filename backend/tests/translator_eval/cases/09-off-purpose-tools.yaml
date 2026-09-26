@@ -1,0 +1,5 @@
+text: The support agent should only use tools related to orders, refunds and customer accounts. Running shell commands or anything unrelated to customer support is off-limits.
+gate_hint: tool_call
+tools: [lookup_order, issue_refund, read_customer_profile, send_email, run_shell, http_request]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 1, jev: true}

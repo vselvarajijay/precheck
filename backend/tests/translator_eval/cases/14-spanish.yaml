@@ -1,0 +1,5 @@
+text: Nunca reembolse más de 200 euros sin la aprobación de un supervisor.
+gate_hint: tool_call
+tools: ["issue_refund(order_id, amount, currency, destination)"]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 1, numeric_predicate: true, jev: false}

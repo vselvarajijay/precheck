@@ -1,0 +1,5 @@
+text: Discounts above 20% require a manager. Discounts must never be applied to gift cards.
+gate_hint: tool_call
+tools: ["apply_discount(order_id, percent, product_type)"]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 2, numeric_predicate: true, jev: false}

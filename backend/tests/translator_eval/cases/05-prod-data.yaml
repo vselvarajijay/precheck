@@ -1,0 +1,5 @@
+text: Any query that runs against the production database needs a human to approve it. Queries against staging are fine.
+gate_hint: tool_call
+tools: ["run_sql(database: prod|staging, query)"]
+agent_purpose: Internal data assistant that answers questions by querying our databases
+expect: {rules: 1, numeric_predicate: false}

@@ -1,0 +1,5 @@
+text: Block any web page or document the agent reads that tries to change the agent's instructions or tells it to ignore its rules.
+gate_hint: ingress
+tools: [fetch_web_page]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 1, jev: true, numeric_predicate: false}

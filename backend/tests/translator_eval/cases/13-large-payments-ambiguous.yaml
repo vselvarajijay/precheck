@@ -1,0 +1,5 @@
+text: Large payments need approval.
+gate_hint: tool_call
+tools: ["make_payment(amount, payee, currency)"]
+agent_purpose: Accounts-payable assistant that pays supplier invoices
+expect: {clarification: true}

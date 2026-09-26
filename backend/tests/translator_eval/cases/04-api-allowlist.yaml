@@ -1,0 +1,6 @@
+text: The agent may only call our APIs at api.example-shop.com and status.example-shop.com. Any other outbound HTTP call is blocked.
+gate_hint: tool_call
+tools: [http_request]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+domains: [api.example-shop.com, status.example-shop.com]
+expect: {rules: 1, jev: false, domain_predicate: true}

@@ -1,0 +1,6 @@
+text: Emails to addresses outside our company domain example-shop.com need approval. Never send invoices to personal webmail addresses such as gmail.com or yahoo.com.
+gate_hint: tool_call
+tools: ["send_email(to, subject, body, attachments)"]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+domains: [example-shop.com]
+expect: {rules: 2, domain_predicate: true}

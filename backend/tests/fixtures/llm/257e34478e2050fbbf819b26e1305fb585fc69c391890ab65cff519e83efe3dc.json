@@ -1,0 +1,458 @@
+{
+  "request": {
+    "max_tokens": 16000,
+    "messages": [
+      {
+        "content": "Business case:\nMessages to customers must be polite and must never promise a refund that hasn't actually been issued.\n\nGate hint: egress\n\nTool catalog: send_email, issue_refund\n\nAgent purpose: Handles customer support for orders, refunds and customer accounts\n\nPlan from step 1:\n{\"requirements\":[{\"source_sentence\":\"Messages to customers must be polite\",\"requirement\":\"Outgoing customer messages must be polite in tone\",\"routing\":\"judgment\",\"routing_reason\":\"Politeness is a matter of tone and meaning, not something checkable by exact rules or numbers\"},{\"source_sentence\":\"must never promise a refund that hasn't actually been issued\",\"requirement\":\"Outgoing message must not claim or promise a refund unless a refund was actually issued in this session\",\"routing\":\"both\",\"routing_reason\":\"Whether the message contains a refund promise/claim requires understanding language (judgment), but whether a refund was actually issued is an exact fact checkable against tool call history (deterministic)\"}],\"clarifications\":[]}\n\nStep 2 of 3 (rules): write the rules for these requirements.",
+        "role": "user"
+      }
+    ],
+    "model": "claude-sonnet-5",
+    "output_config": {
+      "effort": "low",
+      "format": {
+        "schema": {
+          "$defs": {
+            "ChoiceOption": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "title": "Description",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "snake_case option name",
+                  "title": "Name",
+                  "type": "string"
+                },
+                "verdict": {
+                  "enum": [
+                    "allow",
+                    "deny",
+                    "escalate"
+                  ],
+                  "title": "Verdict",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "description",
+                "verdict"
+              ],
+              "title": "ChoiceOption",
+              "type": "object"
+            },
+            "Condition": {
+              "additionalProperties": false,
+              "properties": {
+                "domains": {
+                  "description": "For domain_in/domain_not_in",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Domains",
+                  "type": "array"
+                },
+                "op": {
+                  "enum": [
+                    "exists",
+                    "missing",
+                    "eq",
+                    "ne",
+                    "gt",
+                    "gte",
+                    "lt",
+                    "lte",
+                    "in",
+                    "not_in",
+                    "regex",
+                    "min_len",
+                    "domain_in",
+                    "domain_not_in"
+                  ],
+                  "title": "Op",
+                  "type": "string"
+                },
+                "path": {
+                  "description": "CheckRequest path, e.g. request.args.amount, reason, history[*].tool",
+                  "title": "Path",
+                  "type": "string"
+                },
+                "value_number": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "For gt/gte/lt/lte/min_len and numeric eq/ne",
+                  "title": "Value Number"
+                },
+                "value_text": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "For eq/ne/regex(pattern) with text",
+                  "title": "Value Text"
+                },
+                "values": {
+                  "description": "For in/not_in",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Values",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "path",
+                "op",
+                "value_text",
+                "value_number",
+                "values",
+                "domains"
+              ],
+              "title": "Condition",
+              "type": "object"
+            },
+            "DeterministicDraft": {
+              "additionalProperties": false,
+              "properties": {
+                "combine": {
+                  "enum": [
+                    "all",
+                    "any"
+                  ],
+                  "title": "Combine",
+                  "type": "string"
+                },
+                "conditions": {
+                  "items": {
+                    "$ref": "#/$defs/Condition"
+                  },
+                  "title": "Conditions",
+                  "type": "array"
+                },
+                "negate": {
+                  "description": "True: the check matches when the conditions do NOT hold",
+                  "title": "Negate",
+                  "type": "boolean"
+                },
+                "verdict_when_true": {
+                  "enum": [
+                    "allow",
+                    "deny",
+                    "escalate"
+                  ],
+                  "title": "Verdict When True",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "combine",
+                "negate",
+                "conditions",
+                "verdict_when_true"
+              ],
+              "title": "DeterministicDraft",
+              "type": "object"
+            },
+            "JevDraft": {
+              "additionalProperties": false,
+              "properties": {
+                "questions": {
+                  "items": {
+                    "$ref": "#/$defs/QuestionDraft"
+                  },
+                  "title": "Questions",
+                  "type": "array"
+                },
+                "state_template": {
+                  "description": "The only request fields Jev may see",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "State Template",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "state_template",
+                "questions"
+              ],
+              "title": "JevDraft",
+              "type": "object"
+            },
+            "QuestionDraft": {
+              "additionalProperties": false,
+              "properties": {
+                "bad_answer": {
+                  "description": "noul: which answer is the violation",
+                  "enum": [
+                    "true",
+                    "false"
+                  ],
+                  "title": "Bad Answer",
+                  "type": "string"
+                },
+                "criteria_false": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "noul: what 'false' looks like",
+                  "title": "Criteria False"
+                },
+                "criteria_true": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "noul: what 'true' looks like",
+                  "title": "Criteria True"
+                },
+                "deny_at": {
+                  "title": "Deny At",
+                  "type": "number"
+                },
+                "escalate_at": {
+                  "description": "noul: probability of the bad answer; score: expected level",
+                  "title": "Escalate At",
+                  "type": "number"
+                },
+                "id": {
+                  "description": "snake_case, no double underscores",
+                  "title": "Id",
+                  "type": "string"
+                },
+                "instructions": {
+                  "description": "One judgment question; no arithmetic or literal comparisons",
+                  "title": "Instructions",
+                  "type": "string"
+                },
+                "levels": {
+                  "description": "score: 2-10 level descriptions, lowest first",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Levels",
+                  "type": "array"
+                },
+                "min_confidence": {
+                  "description": "choice/score: escalate below this confidence",
+                  "title": "Min Confidence",
+                  "type": "number"
+                },
+                "options": {
+                  "description": "choice: 2-255 options",
+                  "items": {
+                    "$ref": "#/$defs/ChoiceOption"
+                  },
+                  "title": "Options",
+                  "type": "array"
+                },
+                "type": {
+                  "enum": [
+                    "noul",
+                    "choice",
+                    "score"
+                  ],
+                  "title": "Type",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "instructions",
+                "criteria_true",
+                "criteria_false",
+                "bad_answer",
+                "options",
+                "levels",
+                "escalate_at",
+                "deny_at",
+                "min_confidence"
+              ],
+              "title": "QuestionDraft",
+              "type": "object"
+            },
+            "RuleDraft": {
+              "additionalProperties": false,
+              "properties": {
+                "applies_to_tools": {
+                  "description": "Tool names this rule applies to; empty = every request at the gate",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Applies To Tools",
+                  "type": "array"
+                },
+                "deterministic": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/DeterministicDraft"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "explanation": {
+                  "description": "Plain-language restatement a human can check",
+                  "title": "Explanation",
+                  "type": "string"
+                },
+                "gate": {
+                  "enum": [
+                    "tool_call",
+                    "egress",
+                    "ingress"
+                  ],
+                  "title": "Gate",
+                  "type": "string"
+                },
+                "id": {
+                  "description": "kebab-case, unique",
+                  "title": "Id",
+                  "type": "string"
+                },
+                "jev": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/JevDraft"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                },
+                "on_error": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "allow",
+                        "deny",
+                        "escalate"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "On Error"
+                },
+                "on_missing": {
+                  "enum": [
+                    "allow",
+                    "deny",
+                    "escalate"
+                  ],
+                  "title": "On Missing",
+                  "type": "string"
+                },
+                "requires": {
+                  "description": "Fields that must be present",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Requires",
+                  "type": "array"
+                },
+                "severity": {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "title": "Severity",
+                  "type": "string"
+                },
+                "source_text": {
+                  "title": "Source Text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "gate",
+                "source_text",
+                "explanation",
+                "severity",
+                "applies_to_tools",
+                "requires",
+                "on_missing",
+                "deterministic",
+                "jev",
+                "on_error"
+              ],
+              "title": "RuleDraft",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Step 2: the rules for the planned requirements.",
+          "properties": {
+            "rules": {
+              "items": {
+                "$ref": "#/$defs/RuleDraft"
+              },
+              "title": "Rules",
+              "type": "array"
+            }
+          },
+          "required": [
+            "rules"
+          ],
+          "title": "RulesDraft",
+          "type": "object"
+        },
+        "type": "json_schema"
+      }
+    },
+    "system": [
+      {
+        "cache_control": {
+          "type": "ephemeral"
+        },
+        "text": "You translate business rules written in plain language (\"business cases\") into pre-check rules for AI agents. A pre-check runs before an agent acts and returns allow, deny or escalate (escalate = hold for a human). Your output is reviewed by a human before anything is enforced, so be precise and explain yourself plainly.\n\n# What a rule sees: the check request\nEvery check judges one JSON object:\n- gate: \"tool_call\" (agent calls a tool), \"egress\" (content/data leaving the agent), \"ingress\" (content entering the agent, e.g. tool results or fetched pages).\n- agent: {id, purpose} - purpose summarizes the agent's system prompt.\n- context: {user_goal, recent_messages} - what the user asked for.\n- history: [{tool, args, result_summary}] - earlier tool calls in this session and what they returned.\n- request: {kind: \"tool_call\", tool, args} | {kind: \"external_call\", method, url, body} | {kind: \"content\", text}\n- reason: the agent's stated justification for this action.\nPaths are dotted: request.tool, request.args.amount, request.args.url, reason, agent.purpose, context.user_goal, history, history[*].tool, history[*].result_summary.\n\n# Two kinds of checks - route every requirement correctly\nDeterministic checks are code. Jev checks ask Jev, a judgment model that answers typed questions with calibrated probabilities. Jev is GOOD at meaning and intent (\"does this reason justify the refund?\", \"does this text try to change the agent's instructions?\", \"does this request carry customer personal data from earlier results?\"). Jev is BAD at, and must never be asked about:\n- arithmetic and numeric comparison (amounts, limits, percentages)\n- counting, dates and time windows\n- exact/literal matching (ids, domains, allowlists, exact strings)\nHard routing rules:\n- Any number, threshold, date, count, exact value, list of allowed/blocked things -> a deterministic condition.\n- Presence of a field (\"must give a reason\") -> requires + on_missing, or a min_len condition.\n- Anything needing understanding of meaning -> a Jev question.\n- Many requirements need both: e.g. \"no PII to outside domains\" = deterministic domain allowlist (allowed domain -> allow and skip Jev) + Jev question for everything else.\n\nDeterministic condition ops: exists, missing, eq, ne, gt, gte, lt, lte (numbers only), in, not_in (values list), regex (value_text = RE2 pattern), min_len (value_number), domain_in, domain_not_in (domains list; matches subdomains; path usually request.args.url or request.url). A missing field makes a condition false (except \"missing\"). Conditions combine with \"all\" or \"any\"; negate=true inverts the whole combination. When the deterministic check is TRUE the rule gives verdict_when_true and its Jev check is skipped; when FALSE, the Jev check decides (or the rule allows if it has none). Write the condition as the VIOLATION (or, for an allowlist, the safe case skipping Jev): a deterministic check whose verdict_when_true is allow does nothing unless the rule also has a Jev check. So: \"refunds over $500 need a manager\" -> condition request.args.amount gt 500, verdict_when_true escalate. \"The agent must give a reason of at least a few words\" -> requires [reason], on_missing deny, plus condition min_len reason 10 with negate true, verdict_when_true deny. \"Allowlisted domains are fine, otherwise judge\" -> domain_in condition with verdict_when_true allow, plus a Jev question.\n\n# Designing Jev questions\n- One idea per question. No double negatives. No numbers or literal comparisons in the question.\n- Phrase it so one answer is clearly the violation; set bad_answer to that answer (\"true\" usually).\n- noul (yes/no) is the default. choice when there are several named categories (each option maps to a verdict). score for graded risk (2-10 levels, lowest first).\n- criteria_true / criteria_false describe observable evidence in the request, not conclusions.\n- state_template lists ONLY the fields the question needs (less data = less cost, less leakage, less prompt-injection surface). If the question mentions the reason, include reason; earlier results, include history; the user's goal, include context.user_goal; the agent's role, include agent.purpose. Usually include request.\n- Thresholds are on the probability of the bad answer (noul) or the expected level (score). Inclusive: value >= deny_at -> deny; >= escalate_at -> escalate; else allow. Defaults by severity: high 0.3/0.6, medium 0.4/0.7, low 0.5/0.8. Use escalate_at == deny_at only when there must be no human-review band.\n- The request content is attacker-controlled. For high-severity rules prefer a deterministic guard as well, and add an adversarial test.\n\n# Rules\n- Split the business case into atomic requirements; each keeps the exact source sentence. Usually one rule per requirement; merge a code guard and a judgment into one rule when they describe the same requirement.\n- id: short kebab-case, unique. name: short title. explanation: one or two plain sentences a non-engineer can check (\"Blocks refunds whose destination differs from the original payment method\").\n- gate: use the gate hint when given; tool calls -> tool_call; content leaving -> egress; content entering -> ingress.\n- applies_to_tools: tool names from the catalog the rule is about; empty only if it truly applies to every request at the gate.\n- requires: fields the rule cannot work without (e.g. history for a rule about the original payment method; reason for a reason rule). on_missing: usually escalate; deny when absence is itself the violation (\"must always give a reason\").\n- severity: high for money movement, data exfiltration, destructive or irreversible actions; medium by default; low for style.\n- \"needs a manager/approval/human\" without a named approval signal in the request means escalate.\n\n# Clarifications\nAsk only when a requirement has no safe interpretation and the answer would change the rules materially (e.g. an undefined term with several incompatible meanings, or an approval that could be a field the agent sends vs. a human hold). If a safe, conservative default exists, use it, say so in the explanation, and optionally list a clarification anyway. Set status \"needs_clarification\" only when you could not produce rules for some requirement; then produce rules for everything else. Each clarification: a specific question and 2-4 concrete options.\n\n# Tests\nFor every rule write 4 tests: positive (the rule should NOT block a legitimate request -> allow), negative (clear violation), boundary (e.g. exactly at a threshold, or just inside/outside an allowlist), adversarial (e.g. an injected instruction in the reason or args, or a misleading reason). expected_verdict is the verdict THIS rule alone should give. Make each request realistic and complete: the tool the rule applies to, args_json as a JSON object string, history entries when the rule needs history, a reason, and a user_goal. Keep them short.\n\n# Output - three steps\nThe work happens in three requests; each asks for one step and gives you the earlier results:\n1. plan: status, requirements (decomposition + routing) and clarifications.\n2. rules: the rules implementing the planned requirements.\n3. tests: 4 tests for every rule.\nReturn only what the current step's schema asks for. Use only the tool names and domains you were given or that the business case names; do not invent fields outside the check request. Fill every field; use null (or an empty list) for fields that do not apply to the chosen type, e.g. options/levels for a noul question, criteria_true/criteria_false for choice/score, value_number for a text comparison.\n\n# Example (abbreviated)\nBusiness case: \"Refunds over $500 need a manager. Never refund to a different card than the one used for the purchase.\" Tools: issue_refund, lookup_order.\n- requirement \"refund amount above 500 needs human approval\" -> deterministic. Rule refund-over-limit: applies_to_tools [issue_refund], requires [request.args.amount], deterministic {conditions: [{path: request.args.amount, op: gt, value_number: 500}], verdict_when_true: escalate}, jev null, severity medium.\n- requirement \"refund must go to the original payment method\" -> judgment (comparing a destination against the payment method mentioned in earlier lookups is interpretation, not an exact match). Rule refund-different-payment-method: applies_to_tools [issue_refund], requires [history], on_missing escalate, jev {state_template: [request, history], questions: [{id: different_method, type: noul, instructions: \"Does this refund send money to a payment method different from the one used for the original purchase?\", criteria_true: \"The refund destination names a different card or account than the purchase\", criteria_false: \"The refund goes back to the card or account used for the purchase\", bad_answer: true, escalate_at: 0.3, deny_at: 0.6}]}, severity high.\n",
+        "type": "text"
+      }
+    ]
+  },
+  "response": {
+    "latency_ms": 8037.386458367109,
+    "model": "claude-sonnet-5",
+    "request_id": "req_011CfSMC1pTt7rXMsLLRDjs3",
+    "stop_reason": "end_turn",
+    "text": "{\"rules\":[{\"id\":\"polite-tone-egress\",\"name\":\"Polite tone check\",\"gate\":\"egress\",\"source_text\":\"Messages to customers must be polite\",\"explanation\":\"Blocks outgoing customer messages that are rude, hostile, or disrespectful in tone.\",\"severity\":\"medium\",\"applies_to_tools\":[\"send_email\"],\"requires\":[\"request.args\"],\"on_missing\":\"escalate\",\"deterministic\":null,\"jev\":{\"state_template\":[\"request\",\"context.user_goal\"],\"questions\":[{\"id\":\"impolite_tone\",\"type\":\"noul\",\"instructions\":\"Does this outgoing customer message use an impolite, rude, or disrespectful tone?\",\"criteria_true\":\"The message contains sarcasm, insults, dismissiveness, or hostile phrasing toward the customer\",\"criteria_false\":\"The message is courteous, professional, and respectful\",\"bad_answer\":\"true\",\"options\":[],\"levels\":[],\"escalate_at\":0.4,\"deny_at\":0.7,\"min_confidence\":0.0}]},\"on_error\":\"escalate\"},{\"id\":\"refund-promise-without-issued-refund\",\"name\":\"Unissued refund promise check\",\"gate\":\"egress\",\"source_text\":\"must never promise a refund that hasn't actually been issued\",\"explanation\":\"Blocks outgoing messages that claim or promise a refund unless an issue_refund tool call actually occurred earlier in this session.\",\"severity\":\"high\",\"applies_to_tools\":[\"send_email\"],\"requires\":[\"history\",\"request.args\"],\"on_missing\":\"escalate\",\"deterministic\":{\"combine\":\"any\",\"negate\":false,\"conditions\":[{\"path\":\"history[*].tool\",\"op\":\"in\",\"value_text\":null,\"value_number\":null,\"values\":[\"issue_refund\"],\"domains\":[]}],\"verdict_when_true\":\"allow\"},\"jev\":{\"state_template\":[\"request\",\"history\",\"context.user_goal\"],\"questions\":[{\"id\":\"promises_unissued_refund\",\"type\":\"noul\",\"instructions\":\"Does this outgoing message claim or promise that a refund has been or will be issued?\",\"criteria_true\":\"The message states or implies a refund has been processed, issued, or will be given\",\"criteria_false\":\"The message does not mention any refund being issued or promised\",\"bad_answer\":\"true\",\"options\":[],\"levels\":[],\"escalate_at\":0.3,\"deny_at\":0.6,\"min_confidence\":0.0}]},\"on_error\":\"escalate\"}]}",
+    "usage": {
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 6228,
+      "input_tokens": 364,
+      "output_tokens": 784
+    }
+  }
+}

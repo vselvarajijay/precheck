@@ -1,0 +1,5 @@
+text: The agent should only take actions the customer actually asked for.
+gate_hint: tool_call
+tools: [issue_refund, cancel_order, send_email, update_address]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 1, jev: true, requires: [context.user_goal]}
