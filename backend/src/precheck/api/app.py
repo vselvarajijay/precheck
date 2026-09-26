@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from precheck import __version__
-from precheck.api import validate
+from precheck.api import problems, rules, validate
 from precheck.api.deps import SettingsDep
 
 
@@ -22,6 +22,8 @@ def create_app() -> FastAPI:
         # Never echo the key itself, only whether one is configured.
         return Health(status="ok", version=__version__, jev_configured=settings.jev_configured)
 
+    problems.install(app)
+    app.include_router(rules.router)
     app.include_router(validate.router)
     return app
 

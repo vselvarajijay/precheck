@@ -21,6 +21,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Rules */
+        get: operations["list_rules_api_rules_get"];
+        put?: never;
+        /** Create Rule */
+        post: operations["create_rule_api_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rule */
+        get: operations["get_rule_api_rules__rule_id__get"];
+        /**
+         * Update Rule
+         * @description Creates a new version unless the content is unchanged (`created_version: false`).
+         */
+        put: operations["update_rule_api_rules__rule_id__put"];
+        post?: never;
+        /**
+         * Archive Rule
+         * @description Soft delete: sets status to archived.
+         */
+        delete: operations["archive_rule_api_rules__rule_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rules/{rule_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Rule Status
+         * @description `live` validates and pins the current version (a Jev version must be pinned).
+         */
+        post: operations["set_rule_status_api_rules__rule_id__status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rules/{rule_id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rule Version */
+        get: operations["get_rule_version_api_rules__rule_id__versions__version__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/validate/check-request": {
         parameters: {
             query?: never;
@@ -79,24 +159,44 @@ export interface components {
             purpose?: string | null;
         };
         /** AllPredicate */
-        AllPredicate: {
+        "AllPredicate-Input": {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             op: "all";
             /** Predicates */
-            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"])[];
+            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"])[];
+        };
+        /** AllPredicate */
+        "AllPredicate-Output": {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "all";
+            /** Predicates */
+            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"])[];
         };
         /** AnyPredicate */
-        AnyPredicate: {
+        "AnyPredicate-Input": {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             op: "any";
             /** Predicates */
-            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"])[];
+            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"])[];
+        };
+        /** AnyPredicate */
+        "AnyPredicate-Output": {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "any";
+            /** Predicates */
+            predicates: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"])[];
         };
         /**
          * Bands
@@ -192,9 +292,20 @@ export interface components {
          *     is skipped; a deny short-circuits the whole decision. When false, the Jev check (if any)
          *     decides, otherwise the rule allows.
          */
-        DeterministicCheck: {
+        "DeterministicCheck-Input": {
             /** Predicate */
-            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"];
+            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"];
+            verdict_when_true: components["schemas"]["Verdict"];
+        };
+        /**
+         * DeterministicCheck
+         * @description When `predicate` is true the rule's verdict is `verdict_when_true` and its Jev check
+         *     is skipped; a deny short-circuits the whole decision. When false, the Jev check (if any)
+         *     decides, otherwise the rule allows.
+         */
+        "DeterministicCheck-Output": {
+            /** Predicate */
+            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"];
             verdict_when_true: components["schemas"]["Verdict"];
         };
         /** DomainPredicate */
@@ -218,6 +329,13 @@ export interface components {
             op: "exists" | "missing";
             /** Path */
             path: string;
+        };
+        /** FieldError */
+        FieldError: {
+            /** Field */
+            field: string;
+            /** Message */
+            message: string;
         };
         /**
          * Gate
@@ -287,14 +405,24 @@ export interface components {
             value: number;
         };
         /** NotPredicate */
-        NotPredicate: {
+        "NotPredicate-Input": {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             op: "not";
             /** Predicate */
-            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"];
+            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"];
+        };
+        /** NotPredicate */
+        "NotPredicate-Output": {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "not";
+            /** Predicate */
+            predicate: components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"];
         };
         /** NoulCriteria */
         NoulCriteria: {
@@ -331,6 +459,29 @@ export interface components {
              * @enum {string}
              */
             type: "noul";
+        };
+        /** Problem */
+        Problem: {
+            /** Detail */
+            detail?: string | null;
+            /** Errors */
+            errors?: components["schemas"]["FieldError"][] | null;
+            /** Status */
+            status: number;
+            /** Title */
+            title: string;
+            /**
+             * Type
+             * @default about:blank
+             */
+            type: string;
+        };
+        /** Provenance */
+        Provenance: {
+            /** Prompt Version */
+            prompt_version?: string | null;
+            /** Translator Model */
+            translator_model?: string | null;
         };
         /** RegexPredicate */
         RegexPredicate: {
@@ -375,13 +526,37 @@ export interface components {
          * RuleBody
          * @description The versioned, hashed part of a rule: everything that can change a verdict.
          */
-        RuleBody: {
+        "RuleBody-Input": {
             /**
              * Applies When
              * @description Cheap selector; absent = applies to every request at the gate
              */
-            applies_when?: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate"] | components["schemas"]["AnyPredicate"] | components["schemas"]["NotPredicate"]) | null;
-            deterministic?: components["schemas"]["DeterministicCheck"] | null;
+            applies_when?: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Input"] | components["schemas"]["AnyPredicate-Input"] | components["schemas"]["NotPredicate-Input"]) | null;
+            deterministic?: components["schemas"]["DeterministicCheck-Input"] | null;
+            jev?: components["schemas"]["JevCheck"] | null;
+            /** @description Verdict when Jev fails; absent = gate/severity default */
+            on_error?: components["schemas"]["Verdict"] | null;
+            /** @default escalate */
+            on_missing: components["schemas"]["Verdict"];
+            /**
+             * Requires
+             * @description Fields that must be present, else `on_missing`
+             */
+            requires?: string[];
+            /** @default medium */
+            severity: components["schemas"]["Severity"];
+        };
+        /**
+         * RuleBody
+         * @description The versioned, hashed part of a rule: everything that can change a verdict.
+         */
+        "RuleBody-Output": {
+            /**
+             * Applies When
+             * @description Cheap selector; absent = applies to every request at the gate
+             */
+            applies_when?: (components["schemas"]["ExistsPredicate"] | components["schemas"]["ComparePredicate"] | components["schemas"]["SetPredicate"] | components["schemas"]["RegexPredicate"] | components["schemas"]["MinLenPredicate"] | components["schemas"]["DomainPredicate"] | components["schemas"]["AllPredicate-Output"] | components["schemas"]["AnyPredicate-Output"] | components["schemas"]["NotPredicate-Output"]) | null;
+            deterministic?: components["schemas"]["DeterministicCheck-Output"] | null;
             jev?: components["schemas"]["JevCheck"] | null;
             /** @description Verdict when Jev fails; absent = gate/severity default */
             on_error?: components["schemas"]["Verdict"] | null;
@@ -403,6 +578,206 @@ export interface components {
             jev_model: string | null;
             /** Live Problems */
             live_problems: string[];
+        };
+        /** RuleCreate */
+        RuleCreate: {
+            body: components["schemas"]["RuleBody-Input"];
+            /** Explanation */
+            explanation?: string | null;
+            gate: components["schemas"]["Gate"];
+            /**
+             * Id
+             * @description Slug; derived from name if omitted
+             */
+            id?: string | null;
+            /** Name */
+            name: string;
+            provenance?: components["schemas"]["Provenance"] | null;
+            /** Source Text */
+            source_text?: string | null;
+        };
+        /** RuleDetail */
+        RuleDetail: {
+            /**
+             * Applies To Tools
+             * @description Tool names from a simple `request.tool` eq/in selector, if any
+             */
+            applies_to_tools: string[];
+            /**
+             * Created By
+             * @enum {string}
+             */
+            created_by: "user" | "agent";
+            current: components["schemas"]["RuleVersion"];
+            /** Current Version */
+            current_version: number;
+            gate: components["schemas"]["Gate"];
+            /** Has Deterministic */
+            has_deterministic: boolean;
+            /** Has Jev */
+            has_jev: boolean;
+            /** Id */
+            id: string;
+            /** Jev Model */
+            jev_model: string | null;
+            live: components["schemas"]["RuleVersion"] | null;
+            /** Live Version */
+            live_version: number | null;
+            /** Name */
+            name: string;
+            /** Requires */
+            requires: string[];
+            severity: components["schemas"]["Severity"];
+            /** Source Text */
+            source_text: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "live" | "archived";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Versions */
+            versions: components["schemas"]["VersionSummary"][];
+        };
+        /** RuleStatusChange */
+        RuleStatusChange: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "live" | "archived";
+        };
+        /** RuleSummary */
+        RuleSummary: {
+            /**
+             * Applies To Tools
+             * @description Tool names from a simple `request.tool` eq/in selector, if any
+             */
+            applies_to_tools: string[];
+            /**
+             * Created By
+             * @enum {string}
+             */
+            created_by: "user" | "agent";
+            /** Current Version */
+            current_version: number;
+            gate: components["schemas"]["Gate"];
+            /** Has Deterministic */
+            has_deterministic: boolean;
+            /** Has Jev */
+            has_jev: boolean;
+            /** Id */
+            id: string;
+            /** Jev Model */
+            jev_model: string | null;
+            /** Live Version */
+            live_version: number | null;
+            /** Name */
+            name: string;
+            /** Requires */
+            requires: string[];
+            severity: components["schemas"]["Severity"];
+            /** Source Text */
+            source_text: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "live" | "archived";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** RuleUpdate */
+        RuleUpdate: {
+            body: components["schemas"]["RuleBody-Input"];
+            /** Explanation */
+            explanation?: string | null;
+            /** Name */
+            name?: string | null;
+            provenance?: components["schemas"]["Provenance"] | null;
+            /** Source Text */
+            source_text?: string | null;
+        };
+        /** RuleUpdateResult */
+        RuleUpdateResult: {
+            /**
+             * Applies To Tools
+             * @description Tool names from a simple `request.tool` eq/in selector, if any
+             */
+            applies_to_tools: string[];
+            /**
+             * Created By
+             * @enum {string}
+             */
+            created_by: "user" | "agent";
+            /**
+             * Created Version
+             * @description False when the edit was a no-op (same content)
+             */
+            created_version: boolean;
+            current: components["schemas"]["RuleVersion"];
+            /** Current Version */
+            current_version: number;
+            gate: components["schemas"]["Gate"];
+            /** Has Deterministic */
+            has_deterministic: boolean;
+            /** Has Jev */
+            has_jev: boolean;
+            /** Id */
+            id: string;
+            /** Jev Model */
+            jev_model: string | null;
+            live: components["schemas"]["RuleVersion"] | null;
+            /** Live Version */
+            live_version: number | null;
+            /** Name */
+            name: string;
+            /** Requires */
+            requires: string[];
+            severity: components["schemas"]["Severity"];
+            /** Source Text */
+            source_text: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "live" | "archived";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Versions */
+            versions: components["schemas"]["VersionSummary"][];
+        };
+        /** RuleVersion */
+        RuleVersion: {
+            body: components["schemas"]["RuleBody-Output"];
+            /** Content Hash */
+            content_hash: string;
+            /** Created At */
+            created_at?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Jev Model */
+            jev_model?: string | null;
+            /** Prompt Version */
+            prompt_version?: string | null;
+            /** Rule Id */
+            rule_id: string;
+            /** Source Text */
+            source_text?: string | null;
+            /** Translator Model */
+            translator_model?: string | null;
+            /** Version */
+            version: number;
         };
         /**
          * ScoreOutcome
@@ -471,6 +846,21 @@ export interface components {
          * @enum {string}
          */
         Verdict: "allow" | "deny" | "escalate";
+        /** VersionSummary */
+        VersionSummary: {
+            /** Content Hash */
+            content_hash: string;
+            /** Created At */
+            created_at: string | null;
+            /** Is Current */
+            is_current: boolean;
+            /** Is Live */
+            is_live: boolean;
+            /** Jev Model */
+            jev_model: string | null;
+            /** Version */
+            version: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -496,6 +886,363 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    list_rules_api_rules_get: {
+        parameters: {
+            query?: {
+                gate?: components["schemas"]["Gate"] | null;
+                /** @description Default hides archived */
+                status?: ("draft" | "live" | "archived" | "all") | null;
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleSummary"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_rule_api_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleDetail"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_rule_api_rules__rule_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleDetail"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_rule_api_rules__rule_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleUpdateResult"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archive_rule_api_rules__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleDetail"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_rule_status_api_rules__rule_id__status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleStatusChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleDetail"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_rule_version_api_rules__rule_id__versions__version__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleVersion"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation problem */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -542,7 +1289,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RuleBody"];
+                "application/json": components["schemas"]["RuleBody-Input"];
             };
         };
         responses: {

@@ -170,11 +170,16 @@ class Decision(_Model):
 # --- live validation ------------------------------------------------------------------
 
 
-def live_problems(body: RuleBody) -> list[str]:
-    """Reasons this body cannot be live (empty list = publishable)."""
+def live_problem_details(body: RuleBody) -> list[tuple[str, str]]:
+    """(field path, message) pairs blocking publication (empty list = publishable)."""
     try:
         data = body.model_dump(mode="json", by_alias=True)
         RuleBody.model_validate(data, context={"status": "live"})
     except ValidationError as e:
-        return [f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()]
+        return [(".".join(str(p) for p in err["loc"]), err["msg"]) for err in e.errors()]
     return []
+
+
+def live_problems(body: RuleBody) -> list[str]:
+    """Reasons this body cannot be live, as `field: message` strings."""
+    return [f"{field}: {msg}" for field, msg in live_problem_details(body)]
