@@ -264,3 +264,15 @@ def describe_predicate(pred: Predicate) -> str:
             word = "in" if pred.op == "domain_in" else "not in"
             return f"domain({pred.path}) {word} {pred.domains!r}"
     raise AssertionError("unhandled predicate")  # pragma: no cover
+
+
+def selector_tools(pred: Predicate | None) -> list[str]:
+    """Tool names named by a simple `request.tool` eq/in selector (inside ALLs), else []."""
+    match pred:
+        case ComparePredicate(op="eq", path="request.tool"):
+            return [str(pred.value)]
+        case SetPredicate(op="in", path="request.tool"):
+            return [str(v) for v in pred.values]
+        case AllPredicate():
+            return [t for c in pred.predicates for t in selector_tools(c)]
+    return []

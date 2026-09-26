@@ -1,0 +1,5 @@
+text: Refunds are only allowed within 30 days of purchase.
+gate_hint: tool_call
+tools: ["issue_refund(order_id, amount, destination, days_since_purchase)", lookup_order]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 1, numeric_predicate: true}

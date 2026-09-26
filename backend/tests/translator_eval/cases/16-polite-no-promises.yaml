@@ -1,0 +1,5 @@
+text: Messages to customers must be polite and must never promise a refund that hasn't actually been issued.
+gate_hint: egress
+tools: [send_email, issue_refund]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 2, jev: true, numeric_predicate: false}

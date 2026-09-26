@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from precheck.config import Settings, get_settings
 from precheck.db.engine import engine_for, session_factory
 from precheck.engine import JevEvaluator
+from precheck.translator.llm import JsonLLM
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
@@ -27,3 +28,11 @@ def get_jev(request: Request) -> JevEvaluator:
 
 
 JevDep = Annotated[JevEvaluator, Depends(get_jev)]
+
+
+def get_llm(request: Request) -> JsonLLM:
+    """The process-wide translator LLM client (see app lifespan)."""
+    return request.app.state.llm  # type: ignore[no-any-return]
+
+
+LLMDep = Annotated[JsonLLM, Depends(get_llm)]

@@ -1,0 +1,5 @@
+text: Refunds over $500 need a manager. Never refund to a different card than the one used for the purchase. The agent must say why it's refunding.
+gate_hint: tool_call
+tools: [issue_refund, lookup_order, read_customer_profile]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 3, numeric_predicate: true, jev: true, requires: [history, reason]}

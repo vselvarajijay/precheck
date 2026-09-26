@@ -5,7 +5,7 @@ RUN_WEB  = $(COMPOSE) --profile test run --rm --no-deps --build web-test
 ARGS ?=
 
 .PHONY: up dev down logs build ps test test-backend test-frontend test-live pytest lint typecheck \
-        fmt gen-types e2e e2e-live e2e-record sh-api sh-web
+        fmt gen-types e2e e2e-live e2e-record eval-translator translator-roundtrip sh-api sh-web
 
 up:            ## Start the stack in the background
 	$(COMPOSE) up -d --build --wait
@@ -65,6 +65,12 @@ e2e-live:      ## e2e with real Jev calls (uses TYPESAFE_API_KEY from .env; cost
 
 e2e-record:    ## e2e with real Jev calls, saving fixtures under backend/tests/fixtures/jev
 	E2E_JEV_MODE=record E2E_JEV_KEY="$$(grep '^TYPESAFE_API_KEY=' .env | cut -d= -f2-)" $(MAKE) e2e
+
+eval-translator: ## Score the translator on the eval corpus (live Claude; LLM_MODE=cache reuses recordings)
+	$(COMPOSE) run --rm --no-deps --entrypoint "" -e LLM_MODE=$${LLM_MODE:-cache} api python -m precheck.translator.eval $(ARGS)
+
+translator-roundtrip: ## Translate with tests, then run the generated tests through the engine (live Jev)
+	$(COMPOSE) run --rm --no-deps --entrypoint "" -e LLM_MODE=$${LLM_MODE:-cache} api python -m precheck.translator.roundtrip $(ARGS)
 
 sh-api:
 	$(COMPOSE) exec api sh

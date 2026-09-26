@@ -7,10 +7,11 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from precheck import __version__
-from precheck.api import playground, problems, rules, validate
+from precheck.api import playground, problems, rules, translate, validate
 from precheck.api.deps import SettingsDep
 from precheck.config import get_settings
 from precheck.jev import make_jev_client
+from precheck.translator.llm import make_claude_client
 
 
 class Health(BaseModel):
@@ -28,6 +29,8 @@ def create_app() -> FastAPI:
         owned = None
         if getattr(app.state, "jev", None) is None:
             owned = app.state.jev = make_jev_client(get_settings())
+        if getattr(app.state, "llm", None) is None:
+            app.state.llm = make_claude_client(get_settings())
         yield
         if owned is not None:
             await owned.aclose()
@@ -39,6 +42,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.state.jev = None
+    app.state.llm = None
 
     @app.get("/api/health", response_model=Health, tags=["meta"])
     def health(settings: SettingsDep) -> Health:
@@ -48,6 +52,7 @@ def create_app() -> FastAPI:
     problems.install(app)
     app.include_router(rules.router)
     app.include_router(playground.router)
+    app.include_router(translate.router)
     app.include_router(validate.router)
     return app
 

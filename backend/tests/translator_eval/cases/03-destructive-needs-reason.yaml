@@ -1,0 +1,5 @@
+text: Before deleting a customer account or cancelling an order, the agent must explain why, and the explanation has to match what the customer actually asked for.
+gate_hint: tool_call
+tools: [delete_customer, cancel_order, lookup_order]
+agent_purpose: Handles customer support for orders, refunds and customer accounts
+expect: {rules: 1, jev: true, requires: [reason]}
