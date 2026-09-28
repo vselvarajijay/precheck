@@ -49,6 +49,15 @@ the pieces exist but you have to put them together yourself.
 Put precheck in front of the tools where the rule needs judgment, calibration, or a person
 to approve.
 
+### Reference architecture on AWS
+
+![precheck on AWS reference architecture](docs/architecture/aws-reference-architecture.drawio.svg)
+
+This is a suggested deployment, not a tested one. The repo doesn't deploy to AWS yet, and
+AgentCore Gateway has not been tested as a caller of the proxy. The diagram is in
+[`docs/architecture/`](docs/architecture/) and can be edited in draw.io; the SVG embeds the
+editable source.
+
 ## How it works
 
 precheck sits inline between the agent and its tools. Deterministic rules run first; Jev is
